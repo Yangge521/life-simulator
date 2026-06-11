@@ -20,6 +20,22 @@
         <text class="action-btn" @click="openSocialModal" v-if="character.age >= 22">🤝 社交圈子</text>
         <text class="action-btn" @click="goToAchievements">🏆 成就</text>
       </view>
+      <!-- 故事线进度 -->
+      <view class="storyline-progress" v-if="storyLineProgress.length > 0">
+        <view v-for="(line, idx) in storyLineProgress" :key="idx" class="storyline-item">
+          <text class="storyline-icon">{{ line.icon }}</text>
+          <text class="storyline-name">{{ line.name }}</text>
+          <view class="storyline-bar-wrap">
+            <view class="storyline-bar-fill" :style="{ width: line.percentage + '%' }"></view>
+          </view>
+          <text class="storyline-progress-text">{{ line.current }}/{{ line.total }}</text>
+        </view>
+      </view>
+      <!-- 季节指示器 -->
+      <view class="season-indicator" v-if="seasonContext">
+        <text class="season-emoji">{{ seasonContext.icon }}</text>
+        <text class="season-name">{{ seasonContext.name }}</text>
+      </view>
     </view>
 
     <!-- 属性面板 -->
@@ -29,17 +45,19 @@
           <text class="stat-icon">💰</text>
           <text class="stat-name">财富</text>
           <view class="stat-bar-wrap">
-            <view class="stat-bar" :style="{ width: character.wealth + '%', background: getStatColor(character.wealth) }"></view>
+            <view class="stat-bar" :style="{ width: character.wealth + '%', background: getStatGradient('wealth', character.wealth) }"></view>
           </view>
           <text class="stat-value">{{ character.wealth }}</text>
+          <text class="stat-trend">{{ getStatTrend(character.wealth) }}</text>
         </view>
         <view class="stat-item">
           <text class="stat-icon">❤️</text>
           <text class="stat-name">健康</text>
           <view class="stat-bar-wrap">
-            <view class="stat-bar" :style="{ width: character.health + '%', background: getStatColor(character.health) }"></view>
+            <view class="stat-bar" :style="{ width: character.health + '%', background: getStatGradient('health', character.health) }"></view>
           </view>
           <text class="stat-value">{{ character.health }}</text>
+          <text class="stat-trend">{{ getStatTrend(character.health) }}</text>
         </view>
       </view>
       <view class="stat-row">
@@ -47,17 +65,19 @@
           <text class="stat-icon">😊</text>
           <text class="stat-name">幸福</text>
           <view class="stat-bar-wrap">
-            <view class="stat-bar" :style="{ width: character.happiness + '%', background: getStatColor(character.happiness) }"></view>
+            <view class="stat-bar" :style="{ width: character.happiness + '%', background: getStatGradient('happiness', character.happiness) }"></view>
           </view>
           <text class="stat-value">{{ character.happiness }}</text>
+          <text class="stat-trend">{{ getStatTrend(character.happiness) }}</text>
         </view>
         <view class="stat-item">
           <text class="stat-icon">🧠</text>
           <text class="stat-name">智力</text>
           <view class="stat-bar-wrap">
-            <view class="stat-bar" :style="{ width: character.intelligence + '%', background: getStatColor(character.intelligence) }"></view>
+            <view class="stat-bar" :style="{ width: character.intelligence + '%', background: getStatGradient('intelligence', character.intelligence) }"></view>
           </view>
           <text class="stat-value">{{ character.intelligence }}</text>
+          <text class="stat-trend">{{ getStatTrend(character.intelligence) }}</text>
         </view>
       </view>
       <view class="stat-row">
@@ -65,17 +85,19 @@
           <text class="stat-icon">👥</text>
           <text class="stat-name">社交</text>
           <view class="stat-bar-wrap">
-            <view class="stat-bar" :style="{ width: character.social + '%', background: getStatColor(character.social) }"></view>
+            <view class="stat-bar" :style="{ width: character.social + '%', background: getStatGradient('social', character.social) }"></view>
           </view>
           <text class="stat-value">{{ character.social }}</text>
+          <text class="stat-trend">{{ getStatTrend(character.social) }}</text>
         </view>
         <view class="stat-item">
           <text class="stat-icon">📖</text>
           <text class="stat-name">智慧</text>
           <view class="stat-bar-wrap">
-            <view class="stat-bar" :style="{ width: character.wisdom + '%', background: getStatColor(character.wisdom) }"></view>
+            <view class="stat-bar" :style="{ width: character.wisdom + '%', background: getStatGradient('wisdom', character.wisdom) }"></view>
           </view>
           <text class="stat-value">{{ character.wisdom }}</text>
+          <text class="stat-trend">{{ getStatTrend(character.wisdom) }}</text>
         </view>
       </view>
       <!-- 拓展属性 -->
@@ -111,9 +133,22 @@
 
     <!-- 当前事件 -->
     <view class="event-panel" v-if="currentEvent && !showChoiceModal">
-      <view class="event-card">
-        <text class="event-age">{{ character.age }}岁</text>
+      <view class="event-card" :class="[eventStageClass, { 'storyline-card': currentEvent.isStoryLine, 'special-card': currentEvent.isSpecial }]">
+        <view class="event-header-row">
+          <text class="event-age">{{ character.age }}岁</text>
+          <text class="event-marker storyline" v-if="currentEvent.isStoryLine && currentEvent.storyLineData">
+            📖 {{ currentEvent.storyLineData.lineName }}
+          </text>
+          <text class="event-marker special" v-else-if="currentEvent.isSpecial">
+            {{ currentEvent.icon || '🌟' }} 稀有事件
+          </text>
+          <text class="event-marker stage" v-else>{{ stageIcon }} {{ stageName }}</text>
+        </view>
         <text class="event-text">{{ currentEvent.text }}</text>
+        <view class="event-meta-row" v-if="currentEvent.category">
+          <text class="category-tag">{{ currentEvent.categoryIcon }} {{ currentEvent.categoryText }}</text>
+        </view>
+        <text class="event-atmosphere" v-if="currentEvent.atmosphere">🖋️ {{ currentEvent.atmosphere }}</text>
         <view class="event-effects" v-if="currentEvent.effect">
           <text 
             v-for="(value, key) in currentEvent.effect" :key="key"
@@ -370,7 +405,7 @@
 </template>
 
 <script>
-import { getCurrentStage, generateEvent, applyEventEffect, calculateDeathChance, checkAndUnlockAchievements, getTotalAchievementPoints, startExamPrep, takeExam, getAvailableExams, applyBianzhiEffects, calculateExamSuccessRate, examTypes, examPrepEvents, examResultEvents, bianzhiTypes, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles, getEducationBonus, calculateCareerSalary } from '@/utils/gameEngine.js'
+import { getCurrentStage, generateEvent, applyEventEffect, calculateDeathChance, checkAndUnlockAchievements, getTotalAchievementPoints, startExamPrep, takeExam, getAvailableExams, applyBianzhiEffects, calculateExamSuccessRate, examTypes, examPrepEvents, examResultEvents, bianzhiTypes, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles, getEducationBonus, calculateCareerSalary, getSeasonContext } from '@/utils/gameEngine.js'
 import * as careerData from '@/utils/careerData.js'
 import { getFateNode } from '@/utils/fateWheel.js'
 import { createMilestone, shouldCreateMilestone } from '@/utils/timelineData.js'
@@ -378,6 +413,7 @@ import { getChoiceEvent, processChoiceResult } from '@/utils/choiceEvents.js'
 import { initStoryState, updateStoryState } from '@/utils/storyEngine.js'
 import { getStoryEvent, processEventText } from '@/utils/storyEvents.js'
 import { initRelationships, updateRelationships, getActiveRelationships, getRelationLevel } from '@/utils/relationships.js'
+import { getActiveStoryLineProgress } from '@/utils/storyLines.js'
 import { propertyTypes, cityLevels, propertyEvents, getAvailableProperties, buyPropertyMortgage, buyPropertyCash, sellProperty, processPropertyYear } from '@/utils/propertyData.js'
 import { getAvailableOrganizations, joinOrganization, leaveOrganization, processSocialYear, getSocialTier, getReputationLevel, getSocialEvent, socialOrganizations } from '@/utils/socialCircleData.js'
 import { generateMatchmakingGuests, generateMoments } from '@/utils/relationshipCircleData.js'
@@ -444,6 +480,19 @@ export default {
     examBonusDescription() {
       if (!this.character._career) return ''
       return '💼 在职且非备考状态下无法再次考公'
+    },
+    seasonContext() {
+      return getSeasonContext(this.character.age || 0)
+    },
+    storyLineProgress() {
+      if (!this.character._storyLines || !this.character._storyLines.length) return []
+      return getActiveStoryLineProgress(this.character, this.storyState)
+    },
+    eventStageClass() {
+      if (!this.character) return ''
+      const stage = getCurrentStage(this.character.age || 0)
+      if (!stage) return ''
+      return 'stage-' + stage.id
     }
   },
   onLoad(options) {
@@ -565,6 +614,23 @@ export default {
       if (value >= 40) return 'linear-gradient(90deg, #fbbf24, #f59e0b)'
       if (value >= 20) return 'linear-gradient(90deg, #fb923c, #ea580c)'
       return 'linear-gradient(90deg, #f87171, #dc2626)'
+    },
+    getStatGradient(name, value) {
+      var v = value || 50
+      var gradients = {
+        wealth: 'linear-gradient(90deg, #4ade80, #f59e0b)',
+        health: v >= 60 ? 'linear-gradient(90deg, #4ade80, #22c55e)' : v >= 30 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #f87171, #dc2626)',
+        happiness: v >= 60 ? 'linear-gradient(90deg, #f472b6, #ec4899)' : v >= 30 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #f87171, #dc2626)',
+        intelligence: 'linear-gradient(90deg, #60a5fa, #8b5cf6)',
+        social: 'linear-gradient(90deg, #34d399, #3b82f6)',
+        wisdom: 'linear-gradient(90deg, #a78bfa, #7c3aed)'
+      }
+      return gradients[name] || 'linear-gradient(90deg, #6b7280, #9ca3af)'
+    },
+    getStatTrend(value) {
+      if (value > 70) return '↑'
+      if (value < 30) return '↓'
+      return '→'
     },
     getStatName(key) {
       const names = {
@@ -1546,10 +1612,94 @@ export default {
 .stat-value {
   font-size: 22rpx;
   color: rgba(255, 255, 255, 0.75);
-  width: 48rpx;
+  width: 38rpx;
   text-align: right;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.stat-trend {
+  font-size: 18rpx;
+  width: 24rpx;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+}
+
+/* Season Indicator */
+.season-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  margin-top: 18rpx;
+  padding: 10rpx 24rpx;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 30rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+}
+
+.season-emoji {
+  font-size: 28rpx;
+}
+
+.season-name {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+}
+
+/* Story Line Progress */
+.storyline-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.storyline-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.storyline-icon {
+  font-size: 22rpx;
+  width: 32rpx;
+  text-align: center;
+}
+
+.storyline-name {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.6);
+  width: 100rpx;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.storyline-bar-wrap {
+  flex: 1;
+  height: 8rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.storyline-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+  border-radius: 4rpx;
+  transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.storyline-progress-text {
+  font-size: 18rpx;
+  color: rgba(255, 255, 255, 0.4);
+  width: 44rpx;
+  text-align: right;
+  font-weight: 500;
 }
 
 /* Event Card */
@@ -1564,9 +1714,111 @@ export default {
   border: 1rpx solid rgba(255, 255, 255, 0.12);
   border-radius: 24rpx;
   padding: 28rpx;
-  animation: appleFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: slideUpIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1),
               inset 0 1rpx 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* 阶段渐变背景 */
+.event-card.stage-infant {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.15), rgba(255, 255, 255, 0.06));
+  border-color: rgba(244, 114, 182, 0.2);
+}
+.event-card.stage-child {
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.15), rgba(255, 255, 255, 0.06));
+  border-color: rgba(147, 197, 253, 0.2);
+}
+.event-card.stage-teen {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(255, 255, 255, 0.06));
+  border-color: rgba(167, 139, 250, 0.2);
+}
+.event-card.stage-young {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(255, 255, 255, 0.06));
+  border-color: rgba(96, 165, 250, 0.2);
+}
+.event-card.stage-adult {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(255, 255, 255, 0.06));
+  border-color: rgba(156, 163, 175, 0.2);
+}
+.event-card.stage-elder {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(217, 119, 6, 0.08), rgba(255, 255, 255, 0.06));
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+/* 故事线卡片发光 */
+.event-card.storyline-card {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1),
+              inset 0 1rpx 0 rgba(255, 255, 255, 0.1),
+              0 0 20rpx rgba(168, 85, 247, 0.2);
+}
+
+/* 稀有事件卡片发光 */
+.event-card.special-card {
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1),
+              inset 0 1rpx 0 rgba(255, 255, 255, 0.1),
+              0 0 20rpx rgba(251, 191, 36, 0.2);
+}
+
+/* 事件头部行 */
+.event-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+/* 事件标记 */
+.event-marker {
+  font-size: 20rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  font-weight: 600;
+}
+.event-marker.stage {
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+.event-marker.storyline {
+  color: #c4b5fd;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1rpx solid rgba(168, 85, 247, 0.25);
+}
+.event-marker.special {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1rpx solid rgba(251, 191, 36, 0.25);
+}
+
+/* 事件元数据行 */
+.event-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 12rpx;
+  align-items: center;
+}
+
+/* 类别标签 */
+.category-tag {
+  font-size: 20rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 500;
+}
+
+/* 氛围文字 */
+.event-atmosphere {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.35);
+  display: block;
+  margin-top: 10rpx;
+  font-style: italic;
+  line-height: 1.5;
 }
 
 .event-age {
@@ -1596,21 +1848,24 @@ export default {
 
 .effect-tag {
   font-size: 22rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 40rpx;
   font-weight: 500;
+  letter-spacing: 0.5rpx;
 }
 
 .effect-tag.positive {
-  background: rgba(52, 211, 153, 0.2);
+  background: rgba(52, 211, 153, 0.18);
   color: #6ee7b7;
-  border: 1rpx solid rgba(52, 211, 153, 0.25);
+  border: 1rpx solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 2rpx 8rpx rgba(52, 211, 153, 0.1);
 }
 
 .effect-tag.negative {
-  background: rgba(251, 113, 133, 0.2);
+  background: rgba(251, 113, 133, 0.18);
   color: #fda4af;
-  border: 1rpx solid rgba(251, 113, 133, 0.25);
+  border: 1rpx solid rgba(251, 113, 133, 0.3);
+  box-shadow: 0 2rpx 8rpx rgba(251, 113, 133, 0.1);
 }
 
 /* History Panel */
@@ -2609,6 +2864,17 @@ export default {
 }
 
 /* Animations */
+@keyframes slideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes appleFadeIn {
   from {
     opacity: 0;

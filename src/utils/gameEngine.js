@@ -18,6 +18,125 @@ import { checkDisease, checkAddiction, tryQuitAddiction, calculateAddictionDamag
 import { checkSocialEvent, rollEconomyCycle, applyEconomyToIncome, getEraCareerModifier, generateYearNews, getCurrentEra } from './economySystem.js'
 import { calculateExamSuccessRate, getAvailableExams, takeExam, startExamPrep, applyBianzhiEffects, examPrepEvents, examResultEvents, examTypes, bianzhiTypes, getEducationBonus, calculateExamSuccessRateWithBonus, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles } from './examSystem.js'
 
+// ─── 获取季节上下文 ────────────────────────────────────────
+export function getSeasonContext(age) {
+  const seasons = [
+    { name: '春天', icon: '🌸', mood: '万物复苏，生机勃勃', color: '#f472b6' },
+    { name: '夏天', icon: '☀️', mood: '烈日炎炎，热情似火', color: '#fbbf24' },
+    { name: '秋天', icon: '🍂', mood: '秋风萧瑟，收获的季节', color: '#f97316' },
+    { name: '冬天', icon: '❄️', mood: '寒风凛冽，万物蛰伏', color: '#60a5fa' }
+  ]
+  return seasons[age % 4]
+}
+
+// ─── 丰富事件描述（附加类别、氛围等字段）──────────────────────
+export function enrichEventDescription(event, character, storyState) {
+  if (!event) return event
+
+  const season = getSeasonContext(character.age || 0)
+  const stage = getCurrentStage(character.age || 0)
+
+  // 类别推断
+  if (event.isStoryLine) {
+    event.category = 'fate'
+    event.categoryIcon = '📖'
+    event.categoryText = '故事线'
+  } else if (event.isSpecial) {
+    event.category = 'special'
+    event.categoryIcon = '🌟'
+    event.categoryText = '特殊事件'
+  } else {
+    // 根据 effect 推断类别
+    const effect = event.effect || {}
+    if (effect.wealth || effect.intelligence || effect.education) {
+      event.category = 'career'
+      event.categoryIcon = '💼'
+      event.categoryText = '职业'
+    } else if (effect.happiness || effect.charm || effect.social) {
+      event.category = 'romance'
+      event.categoryIcon = '❤️'
+      event.categoryText = '感情'
+    } else if (effect.health) {
+      event.category = 'life'
+      event.categoryIcon = '🏥'
+      event.categoryText = '生活'
+    } else {
+      event.category = 'random'
+      event.categoryIcon = '🎲'
+      event.categoryText = '随机'
+    }
+  }
+
+  // 季节上下文
+  event.seasonContext = season
+
+  // 根据角色职业/年龄/阶段生成氛围文字
+  const atmospheres = []
+  const career = character._career
+  const careerTitle = character._careerTitle || ''
+  const ageVal = character.age || 0
+
+  if (career) {
+    const careerAtmospheres = {
+      programmer: '键盘敲击声回荡在深夜的办公室里',
+      doctor: '消毒水的气味弥漫在走廊上',
+      teacher: '教室里的朗朗书声是最美的乐章',
+      writer: '笔尖在纸上沙沙作响，灵感涌动',
+      artist: '画室里洒满了温暖的光线',
+      chef: '厨房里飘出诱人的食物香气',
+      civil_servant: '办公室的灯光依然明亮',
+      entrepreneur: '会议室里充满了创业的激情',
+      police: '警灯在夜色中闪烁着光芒',
+      soldier: '训练场上回荡着嘹亮的口号',
+      freelancer: '咖啡厅里，自由的气息弥漫',
+      lawyer: '法槌落下，正义的声音回荡',
+      driver: '车轮滚滚，城市在窗外流动',
+      cashier: '收银台前排起了长队',
+      university_professor: '实验室的仪器发出轻微的嗡鸣',
+      researcher: '实验室里，数据的魅力令人沉醉',
+      ios_indie_dev: 'Mac屏幕前的Swift代码如诗般优雅',
+      apple_designer: '设计稿上的每一个像素都精心雕琢',
+      swift_architect: '代码架构在脑海中清晰成型',
+      tech_tycoon_ceo: '落地窗外，硅谷的灯火璀璨'
+    }
+    if (careerAtmospheres[career]) {
+      atmospheres.push(careerAtmospheres[career])
+    } else if (careerTitle) {
+      atmospheres.push(careerTitle + '的工作日常，充实而忙碌')
+    }
+  }
+
+  if (stage) {
+    const stageAtmospheres = {
+      infant: '婴儿房里传来奶声奶气的咿呀声',
+      child: '童年时光，阳光洒满了操场',
+      teen: '青春期的悸动在心间悄然萌芽',
+      young: '年轻的血液在血管中奔涌',
+      adult: '成熟稳重，岁月的沉淀让人安心',
+      middle: '中年的从容是最宝贵的财富',
+      elder: '夕阳西下，回忆如潮水般涌来'
+    }
+    if (stageAtmospheres[stage.id] && atmospheres.length === 0) {
+      atmospheres.push(stageAtmospheres[stage.id])
+    }
+  }
+
+  if (season && atmospheres.length === 0) {
+    atmospheres.push('这是' + season.name + '，' + season.mood)
+  }
+
+  // 组合氛围文字，限制20字以内
+  if (atmospheres.length > 0) {
+    let combined = atmospheres.join('。')
+    if (combined.length > 20) {
+      combined = combined.substring(0, 20)
+    }
+    event.atmosphere = combined
+  }
+
+  return event
+}
+
 // ─── 获取当前人生阶段 ────────────────────────────────────────
 export function getCurrentStage(age) {
   for (const stage of lifeStages) {
@@ -34,20 +153,20 @@ export function generateEvent(age, character, storyState) {
   if (storyState && storyState.activeStoryLines) {
     const storyLineEvent = getAvailableStoryLineEvent(character, storyState, storyState.activeStoryLines)
     if (storyLineEvent) {
-      return {
+      return enrichEventDescription({
         text: storyLineEvent.stage.event,
         effect: {},
         isStoryLine: true,
         storyLineData: storyLineEvent,
         choices: storyLineEvent.stage.choices || null
-      }
+      }, character, storyState)
     }
   }
   
   // 1. 尝试触发新特殊事件系统（独立文件）
   const specialEvent = tryTriggerSpecialEvent(age, character, storyState)
   if (specialEvent) {
-    return {
+    return enrichEventDescription({
       text: specialEvent.text,
       effect: specialEvent.effect || {},
       isSpecial: true,
@@ -56,7 +175,7 @@ export function generateEvent(age, character, storyState) {
       choices: specialEvent.choices || null,
       followUp: specialEvent.followUp,
       hidden: specialEvent.hidden
-    }
+    }, character, storyState)
   }
 
   // 2. 兼容旧的 specialEvents（从 gameData.js）
@@ -67,13 +186,13 @@ export function generateEvent(age, character, storyState) {
         if (se.conditions.maxAge && age > se.conditions.maxAge) continue
       }
       if (Math.random() < (se.probability || 0.01)) {
-        return {
+        return enrichEventDescription({
           text: se.text,
           effect: se.effect || {},
           isSpecial: true,
           specialId: se.id,
           choices: se.choices || null
-        }
+        }, character, storyState)
       }
     }
   }
@@ -126,23 +245,23 @@ export function generateEvent(age, character, storyState) {
     random -= (weightedEvents[i].weight || 1)
     if (random <= 0) {
       const ev = weightedEvents[i].event
-      return {
+      return enrichEventDescription({
         text: ev.text,
         effect: ev.effect || null,
         choices: ev.choices || null,
         isSpecial: false
-      }
+      }, character, storyState)
     }
   }
 
   // fallback
   const fallback = events[Math.floor(Math.random() * events.length)]
-  return {
+  return enrichEventDescription({
     text: fallback.text,
     effect: fallback.effect || null,
     choices: fallback.choices || null,
     isSpecial: false
-  }
+  }, character, storyState)
 }
 
 // ─── 应用事件效果（支持选择分支）─────────────────────────────

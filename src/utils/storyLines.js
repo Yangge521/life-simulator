@@ -588,6 +588,46 @@ function checkTriggerCondition(trigger, character, storyState) {
   return true
 }
 
+// ─── 获取激活的故事线进度 ────────────────────────────────────────────
+export function getActiveStoryLineProgress(character, storyState) {
+  if (!character || !character._storyLines || character._storyLines.length === 0) return []
+  if (!storyLines) return []
+
+  const progressList = []
+
+  for (const activeLine of character._storyLines) {
+    const line = storyLines[activeLine.type] && storyLines[activeLine.type][activeLine.id]
+    if (!line) continue
+
+    const total = line.stages.length
+    // 计算已完成阶段数：已触发 + 年龄超过该阶段的
+    let completed = 0
+    const completedStages = activeLine.completedStages || []
+    for (let i = 0; i < line.stages.length; i++) {
+      const stage = line.stages[i]
+      // 已完成：在completedStages中，或年龄已超过该阶段年龄
+      if (completedStages.indexOf(i) !== -1 || (character.age || 0) > stage.age) {
+        completed++
+      }
+    }
+    // 当前进行中的阶段
+    const current = Math.min(completed + 1, total)
+    const percentage = Math.min(100, Math.round((completed / total) * 100))
+
+    progressList.push({
+      name: line.name,
+      icon: line.icon,
+      type: activeLine.type,
+      id: activeLine.id,
+      current: current,
+      total: total,
+      percentage: percentage
+    })
+  }
+
+  return progressList
+}
+
 // ─── 获取当前可用故事线事件 ────────────────────────────────────────────
 export function getAvailableStoryLineEvent(character, storyState, activeStoryLines) {
   const availableEvents = []
