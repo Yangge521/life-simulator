@@ -268,7 +268,16 @@ export const lifeEvents = {
         { text: '选普通公立幼儿园', effect: { education: 3, happiness: 3 } },
         { text: '再等一年，在家自己带', effect: { happiness: -3, wealth: 5 } }
       ]
-    }
+    },
+    { text: '你第一次去了动物园，看到大象时嘴巴张成了O型', effect: { happiness: 12, wisdom: 5, creativity: 3 } },
+    { text: '你发了一场高烧，半夜被送去急诊，全家彻夜未眠', effect: { health: -8, happiness: -5 } },
+    { text: '你收到了人生第一份生日礼物——一个毛绒玩具熊', effect: { happiness: 15, social: 3 } },
+    { text: '奶奶/外婆给你唱了一首摇篮曲，你睡得特别香', effect: { happiness: 10, wisdom: 5, social: 3 } },
+    { text: '你第一次见到下雪，兴奋地在雪地里滚来滚去', effect: { happiness: 12, creativity: 5, health: 3 } },
+    { text: '家里给你办了抓周仪式，你抓了一支笔/算盘/食物', effect: { wisdom: 5, happiness: 8, social: 3 } },
+    { text: '你第一次被抱到海边，海浪扑过来时你吓得大哭', effect: { happiness: 8, health: 3, wisdom: 3 } },
+    { text: '外公/外婆给你缝了一双小虎头鞋，你穿着到处显摆', effect: { happiness: 10, social: 5, charm: 5 } },
+    { text: '春节到了，你收到了好多红包，虽然不知道钱是什么', effect: { wealth: 5, happiness: 15, social: 5 } }
   ],
 
   // ── 幼儿期（3-5岁）───────────────────────────────────────
@@ -286,7 +295,16 @@ export const lifeEvents = {
       ]
     },
     { text: '你第一次在舞台上表演节目，紧张但兴奋', effect: { charm: 8, happiness: 10, social: 5 } },
-    { text: '你养的小宠物走丢了，你哭了好几天', effect: { happiness: -12, wisdom: 5 } }
+    { text: '你养的小宠物走丢了，你哭了好几天', effect: { happiness: -12, wisdom: 5 } },
+    { text: '你在幼儿园学会了写自己的名字，回家一遍遍地写', effect: { intelligence: 8, happiness: 10, creativity: 5 } },
+    { text: '妈妈教你背了第一首唐诗，你在晚餐时大声表演', effect: { intelligence: 8, happiness: 10, charm: 5 } },
+    { text: '你偷吃了厨房里的糖，结果被辣哭了（那是辣椒酱！）', effect: { happiness: 5, health: -3, wisdom: 5 } },
+    { text: '你做了一个噩梦，半夜哭着要跟爸爸妈妈一起睡', effect: { happiness: -8, social: 5 } },
+    { text: '爷爷/外公教你下棋/打扑克，你居然赢了一把', effect: { intelligence: 8, social: 8, happiness: 10 } },
+    { text: '你和小朋友在沙坑里玩了一整个下午，回家时浑身是沙', effect: { happiness: 12, health: 5, social: 8, creativity: 5 } },
+    { text: '过年时你收到了压岁钱，但被妈妈"帮你存起来"了', effect: { wealth: -3, happiness: 5, wisdom: 3 } },
+    { text: '你第一次看到烟花，捂住耳朵又忍不住偷看', effect: { happiness: 15, creativity: 5 } },
+    { text: '你在路边捡了一只蜗牛当宠物，养了三天就不见了', effect: { happiness: 5, wisdom: 3, creativity: 5 } }
   ],
 
   // ── 童年（6-11岁）────────────────────────────────────────
@@ -307,7 +325,17 @@ export const lifeEvents = {
       ]
     },
     { text: '你在院子里和小伙伴搭了一个秘密基地', effect: { happiness: 12, creativity: 8, social: 8 } },
-    { text: '你的宠物去世了，你第一次体会到失去的痛苦', effect: { happiness: -15, wisdom: 8 } }
+    { text: '你的宠物去世了，你第一次体会到失去的痛苦', effect: { happiness: -15, wisdom: 8 } },
+    { text: '你参加了学校的运动会，跑了第一名，摔倒了也笑着爬起来', effect: { health: 10, happiness: 12, social: 5 } },
+    { text: '你用了攒了一年的零花钱给妈妈买了母亲节礼物', effect: { happiness: 15, social: 8, wealth: -5 } },
+    { text: '你在课堂上问了一个老师都答不上来的问题', effect: { intelligence: 10, happiness: 8, social: 3 } },
+    { text: '你和同学去河边抓蝌蚪/小虾，弄了一身泥回家挨骂了', effect: { happiness: 12, health: 3, creativity: 8 } },
+    { text: '学校组织去春游，你带了一书包零食和同学们分享', effect: { happiness: 15, social: 12, charm: 5 } },
+    { text: '你因为没做完作业被老师罚站了，但站出了勇气', effect: { happiness: -8, wisdom: 5, courage: 5 } },
+    { text: '你家搬了新房子，你有了一间属于自己的小房间', effect: { happiness: 15, creativity: 5, wealth: -5 } },
+    { text: '中秋节你和家人一起赏月吃月饼，听爷爷讲嫦娥的故事', effect: { happiness: 10, wisdom: 8, social: 5 } },
+    { text: '你偷偷拆了家里的闹钟想看看里面有什么，装不回去了', effect: { happiness: 5, intelligence: 8, creativity: 5 } },
+    { text: '你第一次用零花钱买了彩票/抽奖，什么都没中，但很刺激', effect: { happiness: 5, wisdom: 3 } }
   ],
 
   // ── 青春期（12-17岁）─────────────────────────────────────
@@ -341,7 +369,17 @@ export const lifeEvents = {
     { text: '初恋因为升学/异地和你分手了，你伤心了好久', effect: { happiness: -20, wisdom: 10, social: -5 } },
     { text: '你参加了学校的辩论队/文学社/篮球队，找到了归属', effect: { social: 12, happiness: 10, health: 5 } },
     { text: '你第一次偷偷喝酒/抽烟，觉得大人也不过如此', effect: { health: -8, wisdom: -3, happiness: 3 } },
-    { text: '爷爷/奶奶生病住院了，你第一次直面衰老和疾病', effect: { happiness: -12, wisdom: 10, social: 3 } }
+    { text: '爷爷/奶奶生病住院了，你第一次直面衰老和疾病', effect: { happiness: -12, wisdom: 10, social: 3 } },
+    { text: '你参加了高考/中考百日誓师大会，热血沸腾但也很紧张', effect: { intelligence: 8, happiness: 5, social: 5 } },
+    { text: '你剪了一个很丑的发型，被同学笑了好几天', effect: { charm: -8, happiness: -5, wisdom: 5 } },
+    { text: '你在网上发表的一篇文章/视频意外火了', effect: { social: 15, happiness: 15, creativity: 8 } },
+    { text: '你家为了买学区房省吃俭用，你感受到了父母的苦心', effect: { wisdom: 10, happiness: -5, wealth: -10 } },
+    { text: '你和同桌在课堂上传纸条被老师当场抓住', effect: { happiness: -5, social: 5, wisdom: 5 } },
+    { text: '你第一次去网吧，被爸妈抓个正着', effect: { happiness: -8, social: -5, wisdom: 8 } },
+    { text: '学校组织了成人礼，你戴上礼帽的那一刻觉得自己真长大了', effect: { wisdom: 15, happiness: 12, social: 8 } },
+    { text: '你攒了好久的钱买了一双心仪已久的球鞋', effect: { happiness: 15, wealth: -10, charm: 5 } },
+    { text: '你最好的朋友转学了，你们在车站哭成一团', effect: { happiness: -15, wisdom: 8, social: -5 } },
+    { text: '你参加了志愿者活动去山区支教一周，世界观发生了改变', effect: { wisdom: 15, social: 12, happiness: 10 } }
   ],
 
   // ── 青年（18-34岁）────────────────────────────────────────
@@ -380,7 +418,16 @@ export const lifeEvents = {
     { text: '父亲/母亲生病了，你需要在工作和家庭之间奔波', effect: { wealth: -10, happiness: -10, health: -5, wisdom: 12 } },
     { text: '你在一次行业会议上遇到了改变你职业轨迹的贵人', effect: { wealth: 15, social: 10, wisdom: 8 } },
     { text: '你最好的朋友因为误会和你决裂了', effect: { happiness: -18, social: -15, wisdom: 10 } },
-    { text: '你开始脱发/发福，突然意识到自己不再年轻', effect: { health: -8, happiness: -8, wisdom: 8 } }
+    { text: '你开始脱发/发福，突然意识到自己不再年轻', effect: { health: -8, happiness: -8, wisdom: 8 } },
+    { text: '你第一次出国旅游，一个人在异国街头迷路了但很兴奋', effect: { happiness: 18, wisdom: 10, creativity: 8 } },
+    { text: '你开始学理财，第一次买了基金/股票，天天盯着看', effect: { intelligence: 5, wealth: 8, wisdom: 5 } },
+    { text: '你报名参加了马拉松，训练了三个月跑下来了', effect: { health: 15, happiness: 18, wisdom: 8 } },
+    { text: '你在老家过春节，七大姑八大姨催婚催到你窒息', effect: { happiness: -10, social: -5, wisdom: 5 } },
+    { text: '你收养了一只流浪猫/狗，从此成了铲屎官', effect: { happiness: 15, charm: 5, wealth: -3 } },
+    { text: '你第一次独自面对医疗账单，体会到了保险的重要性', effect: { wealth: -10, wisdom: 10 } },
+    { text: '你参加同学聚会，发现当年的学渣现在比学霸还有钱', effect: { wisdom: 12, happiness: -5, social: 8 } },
+    { text: '你在深夜加班后走在空荡的街道上，突然想家了', effect: { happiness: -8, wisdom: 8, social: 3 } },
+    { text: '你刷了一笔大钱买了人生第一辆车/电子设备', effect: { happiness: 15, wealth: -12, charm: 5 } }
   ],
 
   // ── 中年（35-59岁）────────────────────────────────────────
@@ -422,7 +469,17 @@ export const lifeEvents = {
     { text: '你尝试了新发型/新衣服，感觉重新年轻了', effect: { happiness: 10, charm: 5 } },
     { text: '你决定放下过去的恩怨，原谅了一个曾经伤害过你的人', effect: { happiness: 15, wisdom: 20, social: 5 } },
     { text: '你在工作中遇到了一次严重的挫折，但你没有放弃', effect: { happiness: -10, wisdom: 15, intelligence: 5 } },
-    { text: '你发现自己对某件事的热爱从未减退', effect: { happiness: 15, creativity: 10, wisdom: 5 } }
+    { text: '你发现自己对某件事的热爱从未减退', effect: { happiness: 15, creativity: 10, wisdom: 5 } },
+    { text: '你带孩子回老家过年，看着他们在你小时候的院子里疯跑', effect: { happiness: 18, social: 8, wisdom: 10 } },
+    { text: '你被公司优化/裁员了，人到中年突然失业', effect: { wealth: -15, happiness: -20, wisdom: 15 } },
+    { text: '你开始担心自己的养老金够不够花', effect: { wealth: -5, happiness: -8, wisdom: 10 } },
+    { text: '你的老同学找你合伙做副业，结果还不错', effect: { wealth: 12, happiness: 10, social: 8 } },
+    { text: '你发现发际线越来越高了，默默买了生发产品', effect: { health: -3, happiness: -5, wisdom: 5 } },
+    { text: '你参加了社区的中秋晚会，表演了一个节目', effect: { happiness: 15, social: 12, charm: 5 } },
+    { text: '你开始研究养生，保温杯里泡上了枸杞', effect: { health: 8, wisdom: 5, happiness: 3 } },
+    { text: '你和多年不见的老友在微信群里重逢了', effect: { happiness: 12, social: 15, wisdom: 5 } },
+    { text: '你学会了拍短视频，居然有了几千个粉丝', effect: { creativity: 10, happiness: 10, social: 8 } },
+    { text: '你把孩子送进了大学校门，看着他/她的背影，心里空落落的', effect: { happiness: 5, wisdom: 15, social: -5 } }
   ],
 
   // ── 老年（60岁+）──────────────────────────────────────────
@@ -463,7 +520,17 @@ export const lifeEvents = {
     { text: '你开始练习冥想，内心越来越平静', effect: { wisdom: 15, happiness: 10, health: 5 } },
     { text: '你把自己收藏了一辈子的东西捐给了博物馆', effect: { happiness: 15, social: 20, wisdom: 10 } },
     { text: '你重温了年轻时写的日记，笑着笑着就哭了', effect: { happiness: 8, wisdom: 12, creativity: 5 } },
-    { text: '你在这个年纪学会了游泳，感受到了久违的自由', effect: { health: 10, happiness: 15, wisdom: 5 } }
+    { text: '你在这个年纪学会了游泳，感受到了久违的自由', effect: { health: 10, happiness: 15, wisdom: 5 } },
+    { text: '你的老朋友一个个走了，每次送别后你都在家里沉默很久', effect: { happiness: -20, wisdom: 15, social: -8 } },
+    { text: '你成了小区里的"老顽童"，每天带着大伙跳广场舞', effect: { happiness: 18, social: 15, health: 8 } },
+    { text: '你把自己的老房子卖了，搬进了养老社区', effect: { wealth: 10, happiness: 8, social: 12 } },
+    { text: '你学会了手机支付和网购，觉得自己跟上时代了', effect: { happiness: 10, intelligence: 5, social: 5 } },
+    { text: '你的孩子给你买了一个智能音箱，你天天跟它聊天', effect: { happiness: 12, creativity: 3 } },
+    { text: '你收到了一封几十年前初恋情人写的信，泛黄的纸页让人唏嘘', effect: { happiness: 5, wisdom: 15 } },
+    { text: '你参加了社区春晚，表演了拿手的节目', effect: { happiness: 15, social: 12, charm: 8 } },
+    { text: '你的孩子带你出国旅行了一次，你第一次坐了飞机', effect: { happiness: 25, wisdom: 8, wealth: -10 } },
+    { text: '你把祖传的家谱整理出来，交给了下一代', effect: { wisdom: 18, happiness: 12, social: 8 } },
+    { text: '你在夕阳下和老伴坐在长椅上，什么话都不说也很幸福', effect: { happiness: 20, wisdom: 10, social: 8 } }
   ]
 }
 
@@ -525,6 +592,46 @@ export const specialEvents = [
     effect: { happiness: 28, social: 15, wisdom: 12 },
     probability: 0.015,
     conditions: { minAge: 25 }
+  },
+  {
+    id: 'earthquake_survival',
+    name: '地震幸存',
+    text: '你在地震中被困了十几个小时，但最终被救了出来',
+    effect: { health: -15, happiness: 10, wisdom: 20, social: 8 },
+    probability: 0.008,
+    conditions: { minAge: 10 }
+  },
+  {
+    id: 'child_prodigy',
+    name: '神童闪耀',
+    text: '你的孩子在某个领域展现出了惊人天赋，媒体都来报道了',
+    effect: { happiness: 20, social: 15, wisdom: 5 },
+    probability: 0.006,
+    conditions: { minAge: 35, maxAge: 55 }
+  },
+  {
+    id: 'near_death',
+    name: '死里逃生',
+    text: '你在一次意外中心脏停跳了几秒，被抢救回来后，你对人生有了全新的认识',
+    effect: { health: -20, happiness: 15, wisdom: 25 },
+    probability: 0.005,
+    conditions: { minAge: 25 }
+  },
+  {
+    id: 'hidden_genius',
+    name: '隐藏天赋觉醒',
+    text: '你偶然发现自己竟然有绝对音感/超强记忆力/心算能力',
+    effect: { intelligence: 15, creativity: 15, happiness: 15 },
+    probability: 0.004,
+    conditions: { minAge: 12, maxAge: 40 }
+  },
+  {
+    id: 'world_record',
+    name: '意外世界纪录',
+    text: '你无心做的一件事竟然打破了世界纪录！',
+    effect: { charm: 15, social: 20, happiness: 20 },
+    probability: 0.003,
+    conditions: { minAge: 15, maxAge: 60 }
   }
 ]
 

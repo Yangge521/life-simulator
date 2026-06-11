@@ -114,7 +114,161 @@ export function initStoryState(character) {
   }
 }
 
-// 更新故事状态
+// ─── 事件文本渲染 ────────────────────────────────────────────
+// 将事件模板中的占位符替换为实际值
+export function renderEventText(template, character, storyState) {
+  if (!template) return ''
+  var text = template
+  
+  // 伴侣名字
+  var partnerName = (storyState && storyState.relationship && storyState.relationship.partnerName) || '某人'
+  text = text.replace(/\{partnerName\}/g, partnerName)
+  
+  // 城市名称
+  var cityPool = ['北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '南京', '西安', '重庆', '苏州', '天津', '长沙', '青岛', '厦门']
+  text = text.replace(/\{city\}/g, function() { return cityPool[Math.floor(Math.random() * cityPool.length)] })
+  
+  // 学校名称
+  var schoolPool = ['第一中学', '实验中学', '外国语学校', '师大附中', '育才中学', '光华中学', '振华中学', '明德中学']
+  text = text.replace(/\{schoolName\}/g, function() { return schoolPool[Math.floor(Math.random() * schoolPool.length)] })
+  
+  // 金额
+  text = text.replace(/\{amount\}/g, function() { return (Math.floor(Math.random() * 900) + 100) * 100 + '元' })
+  text = text.replace(/\{largeAmount\}/g, function() { return (Math.floor(Math.random() * 90) + 10) + '万元' })
+  
+  // 年龄
+  var age = (character && character.age) || 0
+  text = text.replace(/\{age\}/g, String(age))
+  
+  // 职业
+  var job = (storyState && storyState.career && storyState.career.job) || ''
+  if (job) {
+    text = text.replace(/\{job\}/g, job)
+  } else {
+    text = text.replace(/\{job\}/g, '职场')
+  }
+  
+  // 子女性别称呼
+  var hasChild = (storyState && storyState.relationship && storyState.relationship.children && storyState.relationship.children.length > 0)
+  if (hasChild) {
+    var lastChild = storyState.relationship.children[storyState.relationship.children.length - 1]
+    var childCall = (lastChild && lastChild.gender === 'female') ? '女儿' : '儿子'
+  } else {
+    var childCall = '孩子'
+  }
+  text = text.replace(/\{childCall\}/g, childCall)
+  
+  // 教育阶段
+  var eduLevel = (storyState && storyState.education && storyState.education.currentLevel) || 'none'
+  var eduMap = {
+    'none': '家里', 'primary': '小学', 'middle': '初中', 'high': '高中',
+    'vocational': '职业院校', 'university': '大学', 'graduate': '研究生院'
+  }
+  text = text.replace(/\{school\}/g, eduMap[eduLevel] || '学校')
+  
+  return text
+}
+
+// ─── 生成人生总结 ────────────────────────────────────────────
+export function generateStorySummary(character, storyState, lifeHistory) {
+  if (!character) return '人生如梦，岁月如歌。'
+  
+  var name = character.name || '你'
+  var age = character.age || 0
+  var lines = []
+  
+  // 开篇
+  if (character.family) {
+    lines.push(name + '出生在一个' + (character.family.name || '普通') + '。')
+  }
+  
+  // 教育
+  if (storyState && storyState.education) {
+    var edu = storyState.education
+    var eduStrs = { 'primary': '小学毕业', 'middle': '初中毕业', 'high': '高中毕业', 'vocational': '职业学校毕业', 'university': '大学毕业', 'graduate': '研究生毕业' }
+    if (edu.currentLevel && eduStrs[edu.currentLevel]) {
+      lines.push(eduStrs[edu.currentLevel] + '后，' + name + '走上了属于自己的人生路。')
+    }
+  }
+  
+  // 感情
+  if (storyState && storyState.relationship) {
+    var rel = storyState.relationship
+    if (rel.status === 'married') {
+      lines.push(name + '在' + (rel.marriageAge || '某') + '岁那年，与' + (rel.partnerName || '心爱之人') + '喜结连理。')
+    } else if (rel.status === 'divorced') {
+      lines.push(name + '曾步入婚姻殿堂，后选择了各自安好。')
+    } else if (rel.status === 'widowed') {
+      lines.push('命运弄人，' + name + '曾与挚爱相守，却未能走到最后。')
+    }
+    if (rel.children && rel.children.length > 0) {
+      lines.push(name + '养育了' + rel.children.length + '个孩子，家庭的温暖是人生最宝贵的财富。')
+    }
+  }
+  
+  // 事业
+  if (storyState && storyState.career && storyState.career.job) {
+    lines.push('在事业上，' + name + '曾是一名' + storyState.career.job + '，付出过汗水与热情。')
+  }
+  
+  // 属性评价
+  var bestAttr = ''
+  var bestVal = 0
+  var attrs = [
+    { key: 'wealth', name: '财富', val: character.wealth || 0 },
+    { key: 'intelligence', name: '智慧', val: character.intelligence || 0 },
+    { key: 'happiness', name: '幸福', val: character.happiness || 0 },
+    { key: 'creativity', name: '创造力', val: character.creativity || 0 },
+    { key: 'wisdom', name: '人生智慧', val: character.wisdom || 0 },
+    { key: 'social', name: '社交能力', val: character.social || 0 }
+  ]
+  for (var i = 0; i < attrs.length; i++) {
+    if (attrs[i].val > bestVal) { bestVal = attrs[i].val; bestAttr = attrs[i].name }
+  }
+  if (bestAttr) {
+    lines.push(name + '一生最突出的品质是' + bestAttr + '，这是留给世界最珍贵的印记。')
+  }
+  
+  // 结局
+  lines.push('在' + age + '岁这一年，' + name + '走完了这趟名为人生的旅程。')
+  
+  return lines.join('')
+}
+
+// ─── 生成年度小节 ────────────────────────────────────────────
+export function generateYearSummary(character, storyState, age, events) {
+  if (!character || !events || events.length === 0) {
+    return age + '岁：平静的一年。'
+  }
+  
+  var summary = age + '岁：'
+  var highlights = []
+  
+  for (var i = 0; i < events.length; i++) {
+    var ev = events[i]
+    if (ev && ev.text) {
+      var shortText = ev.text.length > 20 ? ev.text.substring(0, 20) + '...' : ev.text
+      highlights.push(shortText)
+    }
+  }
+  
+  if (highlights.length === 0) {
+    summary += '生活平稳前行。'
+  } else if (highlights.length === 1) {
+    summary += highlights[0] + '。'
+  } else {
+    summary += highlights.join('；') + '。'
+  }
+  
+  // 添加属性变化
+  var changes = []
+  var attrs = ['wealth', 'happiness', 'health', 'intelligence', 'social', 'charm', 'wisdom', 'creativity']
+  var attrNames = { wealth: '财富', happiness: '幸福', health: '健康', intelligence: '智力', social: '社交', charm: '魅力', wisdom: '智慧', creativity: '创造' }
+  
+  return summary
+}
+
+// ─── 更新故事状态 ────────────────────────────────────────────
 export function updateStoryState(state, action, data) {
   if (!state) {
     state = initStoryState({})

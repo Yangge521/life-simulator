@@ -37,6 +37,36 @@ export const choiceEvents = {
         { text: '小狗狗', effect: { happiness: 10, health: 5 }, followUp: '你有了一只忠诚的小狗', tag: 'has_pet' },
         { text: '什么都不要', effect: { wisdom: 3 }, followUp: '你觉得还是不养比较好' }
       ]
+    },
+    {
+      id: 'toddler_shy',
+      text: '家里来了客人，你躲在妈妈背后不敢出来',
+      conditions: { minAge: 3, maxAge: 5 },
+      choices: [
+        { text: '鼓起勇气打招呼', effect: { social: 8, charm: 5, happiness: 5 }, followUp: '叔叔阿姨都夸你懂事' },
+        { text: '继续躲在妈妈身后', effect: { happiness: -3, social: -3 }, followUp: '妈妈帮你圆了场' },
+        { text: '递了一颗糖给客人', effect: { charm: 10, social: 5, happiness: 5 }, followUp: '一颗糖化解了尴尬' }
+      ]
+    },
+    {
+      id: 'toddler_sick',
+      text: '你突然生病了，要去医院',
+      conditions: { minAge: 3, maxAge: 5 },
+      choices: [
+        { text: '勇敢打针不哭', effect: { health: 5, wisdom: 5, happiness: 5 }, followUp: '护士姐姐都夸你厉害' },
+        { text: '哭着挣扎', effect: { health: 3, happiness: -5 }, followUp: '全医院都听到了你的哭声' },
+        { text: '要妈妈抱着才肯打', effect: { happiness: 5, social: 3 }, followUp: '妈妈抱着你，你感觉好多了' }
+      ]
+    },
+    {
+      id: 'toddler_share',
+      text: '你有两个糖果，旁边的小朋友一个都没有',
+      conditions: { minAge: 3, maxAge: 5 },
+      choices: [
+        { text: '分一个给小朋友', effect: { social: 10, happiness: 8, wisdom: 5 }, followUp: '你交到了一个好朋友', tag: 'generous' },
+        { text: '两个都自己吃', effect: { happiness: 5, wisdom: -3 }, followUp: '你吃得很开心' },
+        { text: '假装没看见', effect: { happiness: 3 }, followUp: '你悄悄地溜走了' }
+      ]
     }
   ],
   
@@ -124,6 +154,46 @@ export const choiceEvents = {
         { text: '报名科学兴趣班', effect: { intelligence: 15 }, followUp: '你成了小科学家', tag: 'science_nerd' },
         { text: '在家做小实验', effect: { intelligence: 10, creativity: 5 }, followUp: '你的房间变成了实验室' },
         { text: '算了太麻烦', effect: { happiness: 3 }, followUp: '你对科学的热情慢慢淡了' }
+      ]
+    },
+    {
+      id: 'grandparent_story',
+      text: '奶奶/外婆给你讲了一个家族的老故事',
+      conditions: { minAge: 7, maxAge: 11 },
+      choices: [
+        { text: '认真听并追问细节', effect: { wisdom: 12, social: 5 }, followUp: '你了解了家族的根', tag: 'family_history' },
+        { text: '听了一会儿就跑去玩了', effect: { happiness: 5 }, followUp: '你错过了有趣的故事' },
+        { text: '拿本子把故事记下来', effect: { creativity: 10, wisdom: 8 }, followUp: '你成了家族的小历史学家' }
+      ]
+    },
+    {
+      id: 'school_leader',
+      text: '班里要选班干部，你想试试吗？',
+      conditions: { minAge: 8, maxAge: 11 },
+      choices: [
+        { text: '竞选班长', effect: { social: 12, charm: 8, happiness: 5 }, followUp: '你成功当选了！', tag: 'leader_kid' },
+        { text: '竞选学习委员', effect: { social: 8, intelligence: 5 }, followUp: '你对学习更认真了' },
+        { text: '不竞选，帮朋友拉票', effect: { social: 5, wisdom: 5 }, followUp: '你的好朋友当选了' }
+      ]
+    },
+    {
+      id: 'new_game',
+      text: '同学带了一个新玩具/新游戏来学校，大家都围着看',
+      conditions: { minAge: 7, maxAge: 11 },
+      choices: [
+        { text: '凑过去一起玩', effect: { social: 10, happiness: 8 }, followUp: '你认识了新朋友' },
+        { text: '专心做自己的事', effect: { wisdom: 5, intelligence: 5 }, followUp: '你更专注于自己的事' },
+        { text: '回家缠着父母买', effect: { happiness: 5, wealth: -5 }, followUp: '父母答应了，但你要洗碗一周' }
+      ]
+    },
+    {
+      id: 'school_lunch',
+      text: '你带了好吃的便当，同学想跟你换',
+      conditions: { minAge: 7, maxAge: 11 },
+      choices: [
+        { text: '大方交换', effect: { social: 8, happiness: 10 }, followUp: '你们成了饭搭子' },
+        { text: '只分享不交换', effect: { social: 5, charm: 5 }, followUp: '同学很感谢你' },
+        { text: '拒绝，自己吃', effect: { happiness: 3 }, followUp: '你一个人吃完了便当' }
       ]
     }
 ]
@@ -294,6 +364,56 @@ choiceEvents.teen = [
       { text: '主动道歉和好', effect: { social: 8, happiness: 8 }, followUp: '你们的友谊更加牢固了' },
       { text: '冷战等待对方先低头', effect: { happiness: -5, wisdom: 3 }, followUp: '你们的关系变得微妙' },
       { text: '找新朋友', effect: { social: 5, happiness: -3 }, followUp: '你认识了新的朋友' }
+    ]
+  },
+  {
+    id: 'teen_gaokao_pressure',
+    text: '高考临近，你感受到了前所未有的压力',
+    conditions: { minAge: 17, maxAge: 18 },
+    choices: [
+      { text: '拼命刷题冲刺', effect: { intelligence: 10, education: 8, health: -5 }, followUp: '你的成绩有了明显提升' },
+      { text: '调整心态劳逸结合', effect: { intelligence: 5, health: 5, wisdom: 5 }, followUp: '你找到了平衡的方法' },
+      { text: '已经放弃治疗了', effect: { happiness: -5, education: -5 }, followUp: '你觉得路不止一条' }
+    ]
+  },
+  {
+    id: 'teen_internet_friend',
+    text: '你在网上认识了一个很聊得来的网友',
+    conditions: { minAge: 14, maxAge: 17 },
+    choices: [
+      { text: '开视频聊天认识一下', effect: { social: 10, happiness: 8 }, followUp: '你们成了跨越屏幕的好朋友' },
+      { text: '保持神秘感', effect: { creativity: 5, happiness: 5 }, followUp: '你享受这种纯粹的精神交流' },
+      { text: '告诉父母让他们放心', effect: { wisdom: 8, social: 5 }, followUp: '父母帮你把关，安全第一' }
+    ]
+  },
+  {
+    id: 'teen_style_change',
+    text: '你想彻底改变自己的形象',
+    conditions: { minAge: 14, maxAge: 17 },
+    choices: [
+      { text: '潮男/潮女路线', effect: { charm: 12, wealth: -5, happiness: 5 }, followUp: '你成了班里的时尚风向标' },
+      { text: '文艺小清新', effect: { charm: 5, creativity: 8, happiness: 8 }, followUp: '你的朋友圈变了画风' },
+      { text: '做自己就好', effect: { wisdom: 8, happiness: 3 }, followUp: '你选择了最舒服的状态' }
+    ]
+  },
+  {
+    id: 'teen_first_job',
+    text: '你想利用暑假打一次工',
+    conditions: { minAge: 15, maxAge: 17 },
+    choices: [
+      { text: '去奶茶店/快餐店', effect: { wealth: 5, social: 8, health: -3 }, followUp: '你第一次体会到了赚钱的辛苦' },
+      { text: '帮邻居带小孩/遛狗', effect: { wealth: 3, social: 5, happiness: 5 }, followUp: '简单但很充实的暑假' },
+      { text: '做线上小买卖', effect: { wealth: 8, intelligence: 5, creativity: 5 }, followUp: '你发现了商业的乐趣' }
+    ]
+  },
+  {
+    id: 'teen_secret_admirer',
+    text: '你收到了一个匿名表白信',
+    conditions: { minAge: 14, maxAge: 17 },
+    choices: [
+      { text: '想办法找出是谁', effect: { intelligence: 5, happiness: 10 }, followUp: '你发现是隔壁班那个安静的同学' },
+      { text: '不理会，假装不在意', effect: { wisdom: 5 }, followUp: '你没放在心上，但偶尔还是会想' },
+      { text: '大大方方公开回应', effect: { social: 8, charm: 5 }, followUp: '你成了校园话题人物' }
     ]
   }
 ]
@@ -526,6 +646,66 @@ choiceEvents.youth = [
         { text: '加入环保组织', effect: { social: 8, happiness: 10, creativity: 5 }, followUp: '你为地球做了一点贡献' },
         { text: '社区志愿服务', effect: { social: 12, happiness: 8 }, followUp: '你融入了社区' }
       ]
+    },
+    {
+      id: 'youth_side_hustle',
+      text: '你想做一份副业增加收入',
+      conditions: { minAge: 25, maxAge: 34 },
+      choices: [
+        { text: '做自媒体/视频拍摄', effect: { wealth: 10, creativity: 10, social: 5 }, followUp: '你的账号慢慢有了起色' },
+        { text: '接私活/兼职', effect: { wealth: 12, health: -5 }, followUp: '虽然累但钱包鼓了' },
+        { text: '投资理财', effect: { wealth: 8, wisdom: 5 }, followUp: '你开始让钱生钱' }
+      ]
+    },
+    {
+      id: 'youth_burnout',
+      text: '你觉得自己要累垮了，工作让你精疲力竭',
+      conditions: { minAge: 25, maxAge: 34, careerStatus: 'employed' },
+      choices: [
+        { text: '请假休息一周', effect: { happiness: 15, health: 10, wealth: -3 }, followUp: '你终于睡了个好觉' },
+        { text: '咬牙坚持', effect: { happiness: -10, health: -8, wealth: 5 }, followUp: '你的身体在抗议' },
+        { text: '换一份轻松的工作', effect: { happiness: 10, wealth: -10, health: 5 }, followUp: '你选择了健康优先' }
+      ]
+    },
+    {
+      id: 'youth_online_dating',
+      text: '朋友推荐你试试交友软件',
+      conditions: { minAge: 22, maxAge: 30, relationshipStatus: 'single' },
+      choices: [
+        { text: '积极尝试', effect: { social: 10, happiness: 8 }, followUp: '你认识了一些有趣的人', tag: 'online_dating' },
+        { text: '半信半疑地试试', effect: { happiness: 5, wisdom: 5 }, followUp: '感觉还行但也不太靠谱' },
+        { text: '拒绝，相信缘分', effect: { wisdom: 5 }, followUp: '你相信对的人会在对的时间出现' }
+      ]
+    },
+    {
+      id: 'youth_expense_crisis',
+      text: '月底了，你的银行卡余额已经见底',
+      conditions: { minAge: 22, maxAge: 30, maxWealth: 30 },
+      choices: [
+        { text: '向父母求助', effect: { wealth: 10, happiness: -5, wisdom: 3 }, followUp: '父母帮你渡过了难关' },
+        { text: '借钱度日', effect: { wealth: 5, social: -5, happiness: -5 }, followUp: '你体验了借钱的心酸' },
+        { text: '拼命加班/兼职', effect: { wealth: 10, health: -5, wisdom: 5 }, followUp: '下个月终于熬过去了' }
+      ]
+    },
+    {
+      id: 'youth_social_anxiety',
+      text: '你被邀请去一个你不熟悉的聚会',
+      conditions: { minAge: 20, maxAge: 30, maxSocial: 45 },
+      choices: [
+        { text: '硬着头皮去', effect: { social: 10, happiness: 5 }, followUp: '其实没你想的那么可怕' },
+        { text: '带上一个朋友一起去', effect: { social: 8, happiness: 8 }, followUp: '有朋友在身边安心多了' },
+        { text: '找个借口不去', effect: { happiness: 3, social: -3 }, followUp: '你在家刷了一晚上手机' }
+      ]
+    },
+    {
+      id: 'youth_pet_adoption',
+      text: '你在街上看到一只流浪猫/狗，它正用无辜的眼神看着你',
+      conditions: { minAge: 20, maxAge: 34 },
+      choices: [
+        { text: '带回家收养', effect: { happiness: 15, wisdom: 5, wealth: -5 }, followUp: '你多了一个小伙伴', tag: 'has_pet' },
+        { text: '送到宠物救助站', effect: { happiness: 8, social: 5 }, followUp: '你帮它找到了安全的归宿' },
+        { text: '买点食物喂完就走', effect: { happiness: 5 }, followUp: '你做了力所能及的事' }
+      ]
     }
 ]
 
@@ -724,6 +904,86 @@ choiceEvents.middle = [
         { text: '积极参与', effect: { happiness: 15, social: 12 }, followUp: '你们重温了童年的回忆' },
         { text: '表面应付', effect: { happiness: -5, social: 5 }, followUp: '聚会变得有些尴尬' },
         { text: '拒绝参加', effect: { happiness: -8, social: -5 }, followUp: '你错过了和解的机会' }
+      ]
+    },
+    {
+      id: 'adult_burnout',
+      text: '日复一日的工作让你感到倦怠，你想改变吗？',
+      conditions: { minAge: 38, maxAge: 55 },
+      choices: [
+        { text: '请长假出去走走', effect: { happiness: 18, health: 10, wealth: -10 }, followUp: '旅行让你重新找到了生活的意义', tag: 'burnout_recovery' },
+        { text: '培养工作之外的爱好', effect: { happiness: 12, creativity: 10 }, followUp: '你的生活多了色彩' },
+        { text: '继续忍耐', effect: { happiness: -10, health: -5 }, followUp: '你变得越来越沉默了' }
+      ]
+    },
+    {
+      id: 'adult_caregiver',
+      text: '你需要同时照顾老人和小孩，两头忙得不可开交',
+      conditions: { minAge: 35, maxAge: 55, hasFlag: 'has_child' },
+      choices: [
+        { text: '请保姆分担', effect: { wealth: -20, happiness: 8, health: 5 }, followUp: '你终于有了喘气的机会' },
+        { text: '和伴侣分工配合', effect: { happiness: 10, social: 8 }, followUp: '你们成了最佳搭档' },
+        { text: '硬扛到底', effect: { happiness: -12, health: -15 }, followUp: '你太累了，但不想放弃' }
+      ]
+    },
+    {
+      id: 'adult_school_reunion',
+      text: '二十年同学聚会邀请你参加',
+      conditions: { minAge: 38, maxAge: 55 },
+      choices: [
+        { text: '盛装出席', effect: { social: 15, happiness: 10, charm: 5 }, followUp: '大家都夸你保养得好' },
+        { text: '低调参与', effect: { social: 8, wisdom: 5 }, followUp: '你见到了几个真正想见的人' },
+        { text: '不去，不想攀比', effect: { wisdom: 5 }, followUp: '你省下了一次不自在的社交' }
+      ]
+    },
+    {
+      id: 'adult_community_service',
+      text: '社区邀请你参与一个公益项目',
+      conditions: { minAge: 35, maxAge: 55 },
+      choices: [
+        { text: '积极加入', effect: { social: 15, happiness: 15, wisdom: 8 }, followUp: '你成了社区的核心人物', tag: 'community_leader' },
+        { text: '捐款支持', effect: { wealth: -10, social: 8, happiness: 8 }, followUp: '你选择了用钱支持' },
+        { text: '婉拒，专心家庭', effect: { happiness: 5 }, followUp: '你把精力留给了家人' }
+      ]
+    },
+    {
+      id: 'adult_divorce_aftermath',
+      text: '离婚后你第一次尝试独自生活',
+      conditions: { minAge: 35, maxAge: 50, relationshipStatus: 'divorced' },
+      choices: [
+        { text: '重新装修了房子', effect: { happiness: 12, wealth: -10 }, followUp: '新环境带来了新心情' },
+        { text: '把精力全部投入工作', effect: { wealth: 15, happiness: -5 }, followUp: '你拼出了业绩但也拼累了身体' },
+        { text: '出去旅行散心', effect: { happiness: 15, wisdom: 8, wealth: -8 }, followUp: '你在路上慢慢治愈了自己' }
+      ]
+    },
+    {
+      id: 'adult_second_mortgage',
+      text: '你考虑换一套更大的房子或者投资第二套',
+      conditions: { minAge: 35, maxAge: 50, minWealth: 50 },
+      choices: [
+        { text: '果断入手', effect: { wealth: -35, happiness: 15, social: 5 }, followUp: '你有了新的资产' },
+        { text: '再存几年钱', effect: { wealth: 10, wisdom: 5 }, followUp: '你选择了更稳健的策略' },
+        { text: '卖掉现在的换一套', effect: { happiness: 10, social: 5 }, followUp: '你升级了居住环境' }
+      ]
+    },
+    {
+      id: 'adult_hobby_business',
+      text: '你的爱好/手艺越做越精，有人愿意花钱买你的作品',
+      conditions: { minAge: 35, maxAge: 55 },
+      choices: [
+        { text: '开个工作室/网店', effect: { wealth: 15, creativity: 10, happiness: 10 }, followUp: '你的爱好变成了事业' },
+        { text: '保持业余爱好', effect: { happiness: 8, creativity: 5 }, followUp: '纯粹的快乐不需要商业化' },
+        { text: '参加比赛提高水平', effect: { creativity: 10, social: 8, happiness: 8 }, followUp: '你的作品获得了认可' }
+      ]
+    },
+    {
+      id: 'adult_grandparent',
+      text: '你当上爷爷/奶奶了！',
+      conditions: { minAge: 48, maxAge: 60 },
+      choices: [
+        { text: '帮忙带孩子享受天伦之乐', effect: { happiness: 20, health: 5, social: 10 }, followUp: '小生命让你重新年轻了一把' },
+        { text: '偶尔来看看就好', effect: { happiness: 10, wisdom: 5 }, followUp: '你给了孩子空间' },
+        { text: '给他们一笔钱请保姆', effect: { wealth: -15, happiness: 8 }, followUp: '你用金钱表达了对孙辈的爱' }
       ]
     }
 ]
