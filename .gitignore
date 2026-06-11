@@ -1,0 +1,38 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+unpackage/
+
+# 微信开发者工具私有配置
+project.private.config.json
+
+# 环境变量 / 密钥
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+npm-debug.log*
+
+# 运行时数据
+saves/
+
+# TypeScript 编译缓存
+*.tsbuildinfo
+
+# uni-app 打包临时文件
+.hbuilderx

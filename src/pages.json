@@ -1,0 +1,74 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "模拟人生",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/birth/birth",
+      "style": {
+        "navigationBarTitleText": "出生选择",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/life/life",
+      "style": {
+        "navigationBarTitleText": "人生旅程",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/ending/ending",
+      "style": {
+        "navigationBarTitleText": "人生终章",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/timeline/timeline",
+      "style": {
+        "navigationBarTitleText": "时间回溯",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/achievements/achievements",
+      "style": {
+        "navigationBarTitleText": "成就殿堂",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/skills/skills",
+      "style": {
+        "navigationBarTitleText": "技能树",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/relationships/relationships",
+      "style": {
+        "navigationBarTitleText": "人际关系",
+        "navigationBarBackgroundColor": "#0a0a1a",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "模拟人生",
+    "navigationBarBackgroundColor": "#0a0a1a",
+    "backgroundColor": "#0a0a1a"
+  }
+}
