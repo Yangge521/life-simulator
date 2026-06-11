@@ -7,6 +7,7 @@ unpackage/
 
 # 微信开发者工具私有配置
 project.private.config.json
+project.config.json
 
 # 环境变量 / 密钥
 .env
