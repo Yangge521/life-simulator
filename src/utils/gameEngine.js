@@ -17,6 +17,7 @@ import { getCareerEvent, calculateSalary, canPromote, getTransitionCareers } fro
 import { checkDisease, checkAddiction, tryQuitAddiction, calculateAddictionDamage, getMentalState, performCheckup } from './healthData.js'
 import { checkSocialEvent, rollEconomyCycle, applyEconomyToIncome, getEraCareerModifier, generateYearNews, getCurrentEra } from './economySystem.js'
 import { calculateExamSuccessRate, getAvailableExams, takeExam, startExamPrep, applyBianzhiEffects, examPrepEvents, examResultEvents, examTypes, bianzhiTypes, getEducationBonus, calculateExamSuccessRateWithBonus, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles } from './examSystem.js'
+import { checkBestieTrigger, updateBesties, hostGathering, checkBestieConflict, getBestieDailyEvent, getFavorLevel } from './broBestie.js'
 
 // ─── 获取季节上下文 ────────────────────────────────────────
 export function getSeasonContext(age) {
@@ -135,6 +136,74 @@ export function enrichEventDescription(event, character, storyState) {
   }
 
   return event
+}
+
+// ─── 挚友系统事件生成 ─────────────────────────────────────────
+export function generateBestieEvent(character, besties, age) {
+  if (!besties || besties.length === 0) return null
+  
+  // 优先检查冲突事件
+  for (var i = 0; i < besties.length; i++) {
+    var conflict = checkBestieConflict(besties[i], character, age)
+    if (conflict) {
+      return {
+        type: 'bestie_conflict',
+        text: conflict.text,
+        effect: conflict.effect || {},
+        bestieId: besties[i].id,
+        bestieName: besties[i].name,
+        conflictType: conflict.type
+      }
+    }
+  }
+  
+  // 日常事件
+  var activeBesties = []
+  for (var j = 0; j < besties.length; j++) {
+    if (besties[j].status === 'active') activeBesties.push(besties[j])
+  }
+  if (activeBesties.length === 0) return null
+  
+  // 随机选一个挚友触发日常事件
+  if (Math.random() < 0.25) {
+    var b = activeBesties[Math.floor(Math.random() * activeBesties.length)]
+    var dailyEv = getBestieDailyEvent(b, character, age)
+    if (dailyEv) {
+      return {
+        type: 'bestie_daily',
+        text: dailyEv.text,
+        effect: dailyEv.effect || {},
+        bestieId: b.id,
+        bestieName: b.name
+      }
+    }
+  }
+  
+  return null
+}
+
+// ─── 获取角色所有挚友信息（用于 UI 渲染）───────────────────────
+export function getBestieDisplay(besties) {
+  if (!besties || besties.length === 0) return []
+  var result = []
+  for (var i = 0; i < besties.length; i++) {
+    var b = besties[i]
+    if (b.status !== 'active') continue
+    var level = getFavorLevel(b.favorScore || 0)
+    result.push({
+      id: b.id,
+      name: b.name,
+      type: b.typeName || '挚友',
+      typeIcon: b.typeIcon || '💎',
+      favorScore: b.favorScore || 0,
+      favorLevel: level.name,
+      favorLevelIcon: level.icon,
+      favorColor: level.color,
+      years: b.knowYears || 0,
+      lastGathering: b.lastGatheringAge || 0
+    })
+  }
+  return result
 }
 
 // ─── 获取当前人生阶段 ────────────────────────────────────────

@@ -1346,6 +1346,232 @@ export function processChoiceResult(choice) {
     success: success,
     hasChance: hasChance,
     tag: choice.tag,
-    stateAction: choice.stateAction
+    stateAction: choice.stateAction,
+    bestieAffection: choice.bestieAffection || 0,
+    gatheringType: choice.gatheringType || null
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 闺蜜兄弟局 - 好友相聚选择事件
+// ═══════════════════════════════════════════════════════════════
+
+// 触发挚友聚会选择事件
+export function getGatheringChoiceEvent(character, besties) {
+  if (!besties || besties.length === 0) return null
+  if (character.age < 8) return null
+  
+  // 找一个好感度较高的挚友
+  var candidates = []
+  for (var i = 0; i < besties.length; i++) {
+    if (besties[i].status === 'active' && besties[i].favorScore > 20) {
+      candidates.push(besties[i])
+    }
+  }
+  if (candidates.length === 0) return null
+  
+  var bestie = candidates[Math.floor(Math.random() * candidates.length)]
+  
+  // 根据年龄和好感度选择可用的局类型
+  var availableGatherings = getAvailableGatheringsForAge(character.age, bestie.favorScore)
+  if (availableGatherings.length === 0) return null
+  
+  var gatheringType = availableGatherings[Math.floor(Math.random() * availableGatherings.length)]
+  
+  // 导入broBestie模块
+  var gatheringInfo = null
+  try {
+    var gTypes = getBroBestieGatheringTypes()
+    for (var j = 0; j < gTypes.length; j++) {
+      if (gTypes[j].id === gatheringType) {
+        gatheringInfo = gTypes[j]
+        break
+      }
+    }
+  } catch(e) {}
+  
+  var icon = gatheringInfo ? gatheringInfo.icon : '🎉'
+  var name = gatheringInfo ? gatheringInfo.name : '聚会'
+  
+  return {
+    id: 'gathering_' + gatheringType + '_' + Date.now(),
+    text: icon + ' ' + bestie.name + '约你一起去' + name + '，你有时间吗？',
+    icon: icon,
+    bestieId: bestie.id,
+    bestieName: bestie.name,
+    gatheringType: gatheringType,
+    choices: [
+      {
+        text: '当然去！最近确实想放松一下',
+        effect: { happiness: 8, wealth: -2, social: 3 },
+        followUp: getGatheringScene(gatheringType),
+        bestieAffection: 8,
+        gatheringType: gatheringType
+      },
+      {
+        text: '走起，但别太破费',
+        effect: { happiness: 5, wealth: -1, social: 2, wisdom: 2 },
+        followUp: '你们度过了一个愉快的时光，虽然没花什么钱，但欢笑不比大餐少。',
+        bestieAffection: 5,
+        gatheringType: gatheringType
+      },
+      {
+        text: '最近太忙了，改天吧',
+        effect: { wealth: 2, happiness: -3 },
+        followUp: bestie.name + '说"行，下次一定要来啊！"你心里有点过意不去，但也确实腾不出时间。',
+        bestieAffection: -3,
+        gatheringType: null
+      }
+    ]
+  }
+}
+
+function getAvailableGatheringsForAge(age, favorScore) {
+  var gatherings = []
+  if (age >= 8) gatherings.push('sports_together', 'gaming_night')
+  if (age >= 12) gatherings.push('dinner_party')
+  if (age >= 14) gatherings.push('karaoke_night')
+  if (age >= 16) gatherings.push('coffee_chat', 'deep_talk')
+  if (age >= 18) gatherings.push('drinks_party', 'travel_together')
+  if (favorScore > 75) gatherings.push('help_crisis')
+  return gatherings
+}
+
+function getGatheringScene(gatheringType) {
+  var scenes = {
+    dinner_party: '你们在一家热闹的店里大快朵颐，笑声不断，一天的压力都释放了。',
+    drinks_party: '觥筹交错间，你们聊了许久不敢聊的话题，关系又近了一步。',
+    gaming_night: '你们组队大杀四方，输赢不重要，重要的是并肩作战的感觉太爽了。',
+    travel_together: '你们自驾去了周边城市，在路上聊了很多，回来的时候感觉彼此都更了解对方了。',
+    karaoke_night: '你们在KTV里放声高歌，管他跑不跑调，开心最重要。一曲"朋友"唱完，眼眶都红了。',
+    coffee_chat: '静静地坐在咖啡店里，不用说什么，只是这样待着就很舒服。',
+    sports_together: '一场酣畅淋漓的运动之后，浑身舒坦，你们约好了下周继续。',
+    deep_talk: '你们聊到了深夜，把心里最柔软的地方给对方看了，出来之后感觉整个人轻松了很多。',
+    help_crisis: '在最需要帮助的时候，他/她二话不说就来了。这份情谊，记一辈子。'
+  }
+  return scenes[gatheringType] || '你们度过了一段愉快的时光。'
+}
+
+// 获取broBestie中的gathering类型列表（避免循环依赖）
+var _gatheringTypesCache = null
+function getBroBestieGatheringTypes() {
+  if (_gatheringTypesCache) return _gatheringTypesCache
+  try {
+    var bb = require('./broBestie.js')
+    _gatheringTypesCache = bb.gatheringTypes || []
+    return _gatheringTypesCache
+  } catch(e) {
+    _gatheringTypesCache = []
+    return _gatheringTypesCache
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 挚友相关的生命十字路口
+// ═══════════════════════════════════════════════════════════════
+
+// 挚友求助事件
+export function getBestieHelpEvent(character, besties) {
+  if (!besties || besties.length === 0) return null
+  if (character.age < 16) return null
+  
+  var closeBesties = []
+  for (var i = 0; i < besties.length; i++) {
+    if (besties[i].status === 'active' && besties[i].favorScore > 50) {
+      closeBesties.push(besties[i])
+    }
+  }
+  if (closeBesties.length === 0) return null
+  
+  var bestie = closeBesties[Math.floor(Math.random() * closeBesties.length)]
+  
+  var scenarios = [
+    {
+      text: '💔 ' + bestie.name + '突然来找你，说他/她遇到了困难，需要用钱周转，希望能借一笔不小的数目……',
+      choices: [
+        { text: '二话不说就借了，朋友有难必须帮', effect: { wealth: -15, happiness: 5, wisdom: 8, social: 5 }, followUp: bestie.name + '非常感动，承诺半年内一定还，你的义气让他/她终生难忘。', bestieAffection: 15 },
+        { text: '借一部分，量力而行', effect: { wealth: -5, happiness: 3, wisdom: 5 }, followUp: bestie.name + '理解你的处境，表示尽力就足够了。你们的关系依然很稳固。', bestieAffection: 5 },
+        { text: '抱歉，我最近手头也不宽裕', effect: { wealth: 0, happiness: -5, wisdom: 3 }, followUp: bestie.name + '说没关系，但你能感觉到他/她有些失落。', bestieAffection: -5 }
+      ]
+    },
+    {
+      text: '🆘 ' + bestie.name + '半夜打来电话，声音哽咽，说有要紧事需要你立刻过去……',
+      choices: [
+        { text: '马上出门，不管多晚都要去', effect: { happiness: 5, health: -3, wisdom: 10, social: 8 }, followUp: '你赶到了他/她身边，陪着度过了最难的时刻。那一夜你们的关系发生了质的变化。', bestieAffection: 20 },
+        { text: '先电话里聊清楚情况再说', effect: { happiness: 2, wisdom: 5 }, followUp: '你们在电话里聊了很久，虽然没见面，但你给了最好的精神支持。', bestieAffection: 5 },
+        { text: '明天还有重要的事……委婉拒绝了', effect: { happiness: -8, wisdom: 2 }, followUp: bestie.name + '说"没事的"就挂了电话，你心里很不是滋味。', bestieAffection: -10 }
+      ]
+    },
+    {
+      text: '🗣️ ' + bestie.name + '和另一个人闹掰了，来找你评理，但实际上你两边都是朋友……',
+      choices: [
+        { text: '冷静分析，帮双方找到和解的方法', effect: { wisdom: 10, social: 8, happiness: 3 }, followUp: '你的调解让双方都心服口服，友情没有被破坏反而更牢固了。', bestieAffection: 10 },
+        { text: '偏向' + bestie.name + '，朋友就是该帮朋友', effect: { happiness: 5, social: 3 }, followUp: bestie.name + '很开心你站在他/她这边，但你知道问题并没有真正解决。', bestieAffection: 12 },
+        { text: '这事我不掺和，你们自己解决吧', effect: { happiness: -3, wisdom: 3 }, followUp: bestie.name + '有点失望，但也表示理解。夹在中间确实不好做人。', bestieAffection: -3 }
+      ]
+    }
+  ]
+  
+  var scenario = scenarios[Math.floor(Math.random() * scenarios.length)]
+  return {
+    id: 'bestie_help_' + Date.now(),
+    text: scenario.text,
+    bestieId: bestie.id,
+    bestieName: bestie.name,
+    choices: scenario.choices
+  }
+}
+
+// 挚友合作/创业事件
+export function getBestieCareerEvent(character, besties) {
+  if (!besties || besties.length === 0) return null
+  if (character.age < 22 || character.age > 45) return null
+  
+  var buddy = null
+  for (var i = 0; i < besties.length; i++) {
+    if (besties[i].status === 'active' && besties[i].favorScore > 60 && besties[i].type === 'work_buddy') {
+      buddy = besties[i]
+      break
+    }
+  }
+  // 如果没有职场战友，也可能是好兄弟/闺蜜
+  if (!buddy) {
+    for (var j = 0; j < besties.length; j++) {
+      if (besties[j].status === 'active' && besties[j].favorScore > 70) {
+        buddy = besties[j]
+        break
+      }
+    }
+  }
+  if (!buddy) return null
+  
+  return {
+    id: 'bestie_career_' + Date.now(),
+    text: '💼 ' + buddy.name + '找上门来说有一个创业机会，想拉你一起干。他/她说你的能力和资源正好互补……',
+    bestieId: buddy.id,
+    bestieName: buddy.name,
+    choices: [
+      {
+        text: '干！朋友的判断我相信',
+        effect: { wealth: 10, happiness: 8, social: 5, wisdom: 3 },
+        followUp: '你们合伙干了起来，虽然辛苦但充满干劲。朋友+合作伙伴的关系让事业有了不一样的意义。',
+        bestieAffection: 10,
+        chance: 0.7,
+        failEffect: { wealth: -8, happiness: -10, wisdom: 10 },
+        failFollowUp: '创业不容易，你们的项目没成功。但你们谁也没怪谁，反而因为一起扛过挫折，关系更铁了。'
+      },
+      {
+        text: '风险太大了，还是安安稳稳打工吧',
+        effect: { wealth: 2, happiness: -3, wisdom: 5 },
+        followUp: buddy.name + '虽然有点失望，但也尊重你的选择。他/她自己干了起来，后来时不时还会请教你意见。',
+        bestieAffection: 2
+      },
+      {
+        text: '我以个人的名义投一点，不参与管理',
+        effect: { wealth: -3, happiness: 3, wisdom: 5 },
+        followUp: '你成了他/公司的忠实支持者，虽然没一起干，但你的信任给了他/她很大的鼓励。',
+        bestieAffection: 8
+      }
+    ]
   }
 }

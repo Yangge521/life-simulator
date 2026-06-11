@@ -38,6 +38,23 @@
       </view>
     </view>
 
+    <!-- 挚友信息条 -->
+    <view class="bestie-strip" v-if="displayBesties.length > 0">
+      <view 
+        v-for="(b, bIdx) in displayBesties" :key="b.id"
+        class="bestie-chip"
+        :style="{ borderColor: b.favorColor }"
+        @click="openBestieDetail(b, bIdx)"
+      >
+        <text class="bestie-chip-icon">{{ b.typeIcon }}</text>
+        <text class="bestie-chip-name">{{ b.name }}</text>
+        <view class="bestie-chip-bar-wrap">
+          <view class="bestie-chip-bar" :style="{ width: (b.favorScore || 0) + '%', background: b.favorColor }"></view>
+        </view>
+        <text class="bestie-chip-level" :style="{ color: b.favorColor }">{{ b.favorLevel }}</text>
+      </view>
+    </view>
+
     <!-- 属性面板 -->
     <view class="stats-panel">
       <view class="stat-row">
@@ -333,6 +350,68 @@
       </view>
     </view>
 
+    <!-- 挚友详情弹窗 -->
+    <view class="bestie-detail-modal" v-if="showBestieModal && currentBestie">
+      <view class="bestie-detail-content">
+        <view class="bestie-detail-header">
+          <text class="bestie-detail-icon">{{ currentBestie.typeIcon }}</text>
+          <view class="bestie-detail-title-group">
+            <text class="bestie-detail-name">{{ currentBestie.name }}</text>
+            <text class="bestie-detail-type">{{ currentBestie.typeName }}</text>
+          </view>
+          <text class="bestie-detail-close" @click="closeBestieDetail">✕</text>
+        </view>
+        <view class="bestie-detail-body">
+          <view class="bestie-bond-panel">
+            <text class="bond-title">羁绊等级：{{ currentBestie.favorLevel }}</text>
+            <view class="bond-bar-wrap">
+              <view class="bond-bar" :style="{ width: (currentBestie.favorScore || 0) + '%', background: currentBestie.favorColor }"></view>
+            </view>
+            <view class="bond-stats">
+              <text class="bond-stat">好感度 {{ currentBestie.favorScore }}/100</text>
+              <text class="bond-stat">相识 {{ currentBestie.years }} 年</text>
+            </view>
+          </view>
+          <view class="bestie-actions">
+            <text class="bestie-action-btn" @click="startGathering('dinner_party')">🍽️ 约饭</text>
+            <text class="bestie-action-btn" @click="startGathering('coffee_chat')">☕ 喝咖啡</text>
+            <text class="bestie-action-btn" @click="startGathering('gaming_night')">🎮 开黑</text>
+            <text class="bestie-action-btn" @click="startGathering('travel_together')">✈️ 旅行</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 挚友聚会确认弹窗 -->
+    <view class="gathering-modal" v-if="showGatheringModal && currentGatheringEvent">
+      <view class="gathering-content">
+        <view class="gathering-header">
+          <text class="gathering-icon">{{ currentGatheringEvent.icon || '🎉' }}</text>
+          <text class="gathering-title">聚会邀约</text>
+        </view>
+        <text class="gathering-text">{{ currentGatheringEvent.text }}</text>
+        <view class="gathering-options">
+          <view 
+            v-for="(choice, idx) in currentGatheringEvent.choices" :key="idx"
+            class="gathering-option"
+            @click="makeGatheringChoice(choice, idx)"
+          >
+            <text class="gathering-option-text">{{ choice.text }}</text>
+            <view class="gathering-option-preview" v-if="showEffectPreview && choice.effect">
+              <text 
+                v-for="(value, key) in choice.effect" :key="key"
+                class="preview-tag"
+                :class="{ positive: value > 0, negative: value < 0 }"
+                v-if="getStatEmoji(key) && typeof value === 'number'"
+              >
+                {{ getStatEmoji(key) }}{{ value > 0 ? '+' : '' }}{{ value }}
+              </text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 房产配置弹窗 -->
     <view class="property-modal" v-if="showPropertyModal && currentPropertyChoice">
       <view class="property-content">
@@ -405,7 +484,9 @@
 </template>
 
 <script>
-import { getCurrentStage, generateEvent, applyEventEffect, calculateDeathChance, checkAndUnlockAchievements, getTotalAchievementPoints, startExamPrep, takeExam, getAvailableExams, applyBianzhiEffects, calculateExamSuccessRate, examTypes, examPrepEvents, examResultEvents, bianzhiTypes, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles, getEducationBonus, calculateCareerSalary, getSeasonContext } from '@/utils/gameEngine.js'
+import { getCurrentStage, generateEvent, applyEventEffect, calculateDeathChance, checkAndUnlockAchievements, getTotalAchievementPoints, startExamPrep, takeExam, getAvailableExams, applyBianzhiEffects, calculateExamSuccessRate, examTypes, examPrepEvents, examResultEvents, bianzhiTypes, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles, getEducationBonus, calculateCareerSalary, getSeasonContext, generateBestieEvent, getBestieDisplay } from '@/utils/gameEngine.js'
+import { checkBestieTrigger, hostGathering, updateBesties, getFavorLevel } from '@/utils/broBestie.js'
+import { getGatheringChoiceEvent, getBestieHelpEvent, getBestieCareerEvent } from '@/utils/choiceEvents.js'
 import * as careerData from '@/utils/careerData.js'
 import { getFateNode } from '@/utils/fateWheel.js'
 import { createMilestone, shouldCreateMilestone } from '@/utils/timelineData.js'
@@ -450,7 +531,13 @@ export default {
       cityLevel: 'tier2',
       joinedOrgs: [],
       showSocialModal: false,
-      availableOrgs: []
+      availableOrgs: [],
+      besties: [],
+      showBestieModal: false,
+      currentBestie: null,
+      currentBestieIndex: -1,
+      showGatheringModal: false,
+      currentGatheringEvent: null
     }
   },
   computed: {
@@ -493,6 +580,10 @@ export default {
       const stage = getCurrentStage(this.character.age || 0)
       if (!stage) return ''
       return 'stage-' + stage.id
+    },
+    displayBesties() {
+      if (!this.besties || !this.besties.length) return []
+      return getBestieDisplay(this.besties)
     }
   },
   onLoad(options) {
@@ -560,6 +651,7 @@ export default {
       this.relationships = uni.getStorageSync('relationships') || []
       this.properties = uni.getStorageSync('properties') || []
       this.joinedOrgs = uni.getStorageSync('joinedOrgs') || []
+      this.besties = uni.getStorageSync('besties') || []
     },
     createBirthMilestone() {
             const familyName = (this.character.family && this.character.family.name) || '普通家庭'
@@ -606,6 +698,7 @@ export default {
       uni.setStorageSync('relationships', this.relationships)
       uni.setStorageSync('properties', this.properties)
       uni.setStorageSync('joinedOrgs', this.joinedOrgs)
+      uni.setStorageSync('besties', this.besties)
       uni.setStorageSync('lifeSimSave', { timestamp: Date.now() })
     },
     getStatColor(value) {
@@ -868,12 +961,58 @@ export default {
           this.character = applyEventEffect(this.character, event.effect || {})
           this.history.push({ age: this.character.age, text: event.text, effect: event.effect || {} })
           this.checkAndCreateMilestone(event)
+        } else if (this.besties && this.besties.length > 0) {
+          // 没有主线事件时，尝试触发挚友日常事件
+          var bestieEv = generateBestieEvent(this.character, this.besties, this.character.age)
+          if (bestieEv) {
+            this.currentEvent = { text: bestieEv.text, effect: bestieEv.effect || {} }
+            this.character = applyEventEffect(this.character, bestieEv.effect || {})
+            this.history.push({ age: this.character.age, text: bestieEv.text, effect: bestieEv.effect || {} })
+          }
         }
       }
       
       // 年度关系网更新
       if (this.relationships && this.relationships.length) {
         this.relationships = updateRelationships(this.relationships, this.character)
+      }
+      
+      // 挚友系统年度更新
+      if (this.besties && this.besties.length > 0) {
+        this.besties = updateBesties(this.besties, this.character, this.character.age)
+      }
+      
+      // 尝试触发新挚友相识事件
+      if (!this.showChoiceModal && !this.currentEvent) {
+        var bestieTrigger = checkBestieTrigger(this.character, this.besties, this.character.age)
+        if (bestieTrigger && bestieTrigger.event) {
+          this.besties.push(bestieTrigger.bestie)
+          this.currentEvent = { 
+            text: bestieTrigger.event.text, 
+            effect: bestieTrigger.event.effect || {} 
+          }
+          this.character = applyEventEffect(this.character, bestieTrigger.event.effect || {})
+          this.history.push({ age: this.character.age, text: bestieTrigger.event.text, effect: bestieTrigger.event.effect || {} })
+        }
+      }
+      
+      // 触发挚友相关的选择事件（聚会/求助/合作）
+      if (!this.showChoiceModal && !this.currentEvent && this.besties && this.besties.length > 0 && this.character.age >= 16) {
+        var gatheringChoices = [
+          function() { return getGatheringChoiceEvent(this.character, this.besties) },
+          function() { return getBestieHelpEvent(this.character, this.besties) },
+          function() { return getBestieCareerEvent(this.character, this.besties) }
+        ]
+        // 随机选一种类型的挚友选择事件
+        if (Math.random() < 0.25) {
+          var choiceFn = gatheringChoices[Math.floor(Math.random() * gatheringChoices.length)]
+          var gatheringChoice = choiceFn.call(this)
+          if (gatheringChoice) {
+            this.currentGatheringEvent = gatheringChoice
+            this.showGatheringModal = true
+            return
+          }
+        }
       }
       
       // 每年主动更新朋友圈与相亲嘉宾缓存
@@ -1441,7 +1580,105 @@ export default {
     getBianzhiStability(bianzhiId) {
       var map = { administrative: '行政编制 (极稳定)', public_institution: '事业编制 (极稳定)', teacher: '教师编制 (稳定)', medical: '医疗编制 (稳定)', military_civilian: '军队文职 (极稳定)', none: '非在编人员 (无编制)' }
       return map[bianzhiId] || '非在编人员'
-    }
+    },
+    openBestieDetail(bestie, index) {
+      // 在原始 besties 数组中根据 id 查找
+      var rawBestie = null
+      var rawIdx = -1
+      for (var i = 0; i < this.besties.length; i++) {
+        if (this.besties[i].id === bestie.id) {
+          rawBestie = this.besties[i]
+          rawIdx = i
+          break
+        }
+      }
+      if (!rawBestie) return
+      
+      this.currentBestie = {
+        id: rawBestie.id,
+        name: rawBestie.name,
+        type: rawBestie.type,
+        typeName: rawBestie.typeName,
+        typeIcon: rawBestie.typeIcon,
+        favorScore: rawBestie.favorScore || 0,
+        favorLevel: getFavorLevel(rawBestie.favorScore || 0).name,
+        favorColor: getFavorLevel(rawBestie.favorScore || 0).color,
+        years: rawBestie.knowYears || 0
+      }
+      this.currentBestieIndex = rawIdx
+      this.showBestieModal = true
+    },
+    closeBestieDetail() {
+      this.showBestieModal = false
+      this.currentBestie = null
+      this.currentBestieIndex = -1
+    },
+    startGathering(typeId) {
+      var idx = this.currentBestieIndex
+      if (idx < 0 || idx >= this.besties.length) return
+      
+      var bestie = this.besties[idx]
+      var result = hostGathering(bestie, this.character, typeId)
+      if (!result || !result.success) {
+        uni.showToast({ title: result && result.reason || '无法发起聚会', icon: 'none' })
+        return
+      }
+      
+      // 更新 bestie 数据
+      this.besties[idx] = bestie
+      
+      // 应用效果
+      this.character = applyEventEffect(this.character, result.effects)
+      
+      // 更新 UI
+      this.currentBestie.favorScore = bestie.favorScore
+      this.currentBestie.favorLevel = getFavorLevel(bestie.favorScore).name
+      
+      // 弹出聚会结果
+      uni.showToast({ title: '聚会愉快！好感度+' + result.affectionGain, icon: 'none', duration: 2000 })
+      
+      // 添加历史事件
+      this.history.push({
+        age: this.character.age,
+        text: '和' + bestie.name + '搞了一次' + (result.gathering ? result.gathering.name : '') + '，很开心。'
+      })
+      
+      this.closeBestieDetail()
+    },
+    makeGatheringChoice(choice, index) {
+      var result = processChoiceResult(choice)
+      
+      // 应用效果
+      this.character = applyEventEffect(this.character, result.effect || {})
+      this.history.push({
+        age: this.character.age,
+        text: result.followUp || choice.followUp || ''
+      })
+      
+      // 更新对应挚友好感度
+      if (result.bestieAffection && this.currentGatheringEvent && this.currentGatheringEvent.bestieId) {
+        var bid = this.currentGatheringEvent.bestieId
+        for (var i = 0; i < this.besties.length; i++) {
+          if (this.besties[i].id === bid) {
+            this.besties[i].favorScore = Math.min(100, Math.max(0, (this.besties[i].favorScore || 0) + result.bestieAffection))
+            this.besties[i].lastGatheringAge = this.character.age
+            if (result.gatheringType && result.bestieAffection > 0) {
+              this.besties[i].gatherings = this.besties[i].gatherings || []
+              this.besties[i].gatherings.push({
+                type: result.gatheringType,
+                age: this.character.age,
+                affectionGain: result.bestieAffection
+              })
+            }
+            break
+          }
+        }
+      }
+      
+      this.showGatheringModal = false
+      this.currentGatheringEvent = null
+      this.saveGame()
+    },
   }
 }
 </script>
@@ -2926,5 +3163,226 @@ export default {
     opacity: 0;
     transform: translateX(-50%) translateY(-16rpx) scale(0.92);
   }
+}
+
+/* ─── 挚友信息条 ───────────────────────────────── */
+.bestie-strip {
+  margin: 12rpx 20rpx 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.bestie-chip {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 24rpx;
+  background: rgba(255,255,255,0.95);
+  border: 2rpx solid #60a5fa;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+}
+.bestie-chip-icon {
+  font-size: 24rpx;
+}
+.bestie-chip-name {
+  font-size: 22rpx;
+  color: #374151;
+  font-weight: 600;
+  max-width: 100rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bestie-chip-bar-wrap {
+  width: 60rpx;
+  height: 6rpx;
+  background: #e5e7eb;
+  border-radius: 3rpx;
+  overflow: hidden;
+}
+.bestie-chip-bar {
+  height: 100%;
+  border-radius: 3rpx;
+  transition: width 0.3s;
+}
+.bestie-chip-level {
+  font-size: 18rpx;
+  font-weight: 700;
+}
+
+/* ─── 挚友详情弹窗 ───────────────────────────── */
+.bestie-detail-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s;
+}
+.bestie-detail-content {
+  width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  animation: slideUp 0.3s;
+}
+.bestie-detail-header {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+  background: linear-gradient(135deg, #fce7f3, #e0e7ff);
+  gap: 16rpx;
+}
+.bestie-detail-icon {
+  font-size: 56rpx;
+}
+.bestie-detail-title-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.bestie-detail-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+.bestie-detail-type {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+.bestie-detail-close {
+  font-size: 32rpx;
+  color: #9ca3af;
+  padding: 8rpx;
+}
+.bestie-detail-body {
+  padding: 24rpx 32rpx 32rpx;
+}
+.bond-panel {
+  margin-bottom: 24rpx;
+}
+.bond-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 12rpx;
+}
+.bond-bar-wrap {
+  height: 14rpx;
+  background: #e5e7eb;
+  border-radius: 7rpx;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+.bond-bar {
+  height: 100%;
+  border-radius: 7rpx;
+  transition: width 0.4s;
+}
+.bond-stats {
+  display: flex;
+  gap: 24rpx;
+}
+.bond-stat {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+.bestie-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.bestie-action-btn {
+  flex: 1;
+  min-width: 120rpx;
+  text-align: center;
+  padding: 16rpx 12rpx;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  color: #374151;
+  border: 1rpx solid #e5e7eb;
+  transition: all 0.2s;
+}
+.bestie-action-btn:active {
+  background: linear-gradient(135deg, #ede9fe, #dbeafe);
+  transform: scale(0.97);
+}
+
+/* ─── 聚会确认弹窗 ───────────────────────────── */
+.gathering-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1001;
+  animation: fadeIn 0.25s;
+}
+.gathering-content {
+  width: 640rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  animation: slideUp 0.3s;
+}
+.gathering-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+.gathering-icon {
+  font-size: 40rpx;
+}
+.gathering-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+.gathering-text {
+  font-size: 26rpx;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 24rpx;
+  display: block;
+}
+.gathering-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.gathering-option {
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border-radius: 16rpx;
+  border: 1rpx solid #d1fae5;
+}
+.gathering-option:active {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  transform: scale(0.98);
+}
+.gathering-option-text {
+  font-size: 26rpx;
+  color: #374151;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8rpx;
+}
+.gathering-option-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+.preview-tag {
+  font-size: 20rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 8rpx;
+}
+.preview-tag.positive {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.preview-tag.negative {
+  background: #fee2e2;
+  color: #dc2626;
 }
 </style>
