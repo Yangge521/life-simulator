@@ -58,63 +58,75 @@
     <!-- 属性面板 -->
     <view class="stats-panel">
       <view class="stat-row">
-        <view class="stat-item">
+        <view class="stat-item" :class="{ warning: character.wealth < 20 }">
           <text class="stat-icon">💰</text>
           <text class="stat-name">财富</text>
           <view class="stat-bar-wrap">
             <view class="stat-bar" :style="{ width: character.wealth + '%', background: getStatGradient('wealth', character.wealth) }"></view>
           </view>
           <text class="stat-value">{{ character.wealth }}</text>
-          <text class="stat-trend">{{ getStatTrend(character.wealth) }}</text>
+          <view class="stat-sparkline">
+            <text v-for="(dot, di) in getSparklineDots('wealth')" :key="di" class="spark-dot" :class="'dot-' + dot"></text>
+          </view>
         </view>
-        <view class="stat-item">
+        <view class="stat-item" :class="{ warning: character.health < 20 }">
           <text class="stat-icon">❤️</text>
           <text class="stat-name">健康</text>
           <view class="stat-bar-wrap">
             <view class="stat-bar" :style="{ width: character.health + '%', background: getStatGradient('health', character.health) }"></view>
           </view>
           <text class="stat-value">{{ character.health }}</text>
-          <text class="stat-trend">{{ getStatTrend(character.health) }}</text>
+          <view class="stat-sparkline">
+            <text v-for="(dot, di) in getSparklineDots('health')" :key="di" class="spark-dot" :class="'dot-' + dot"></text>
+          </view>
         </view>
       </view>
       <view class="stat-row">
-        <view class="stat-item">
+        <view class="stat-item" :class="{ warning: character.happiness < 20 }">
           <text class="stat-icon">😊</text>
           <text class="stat-name">幸福</text>
           <view class="stat-bar-wrap">
             <view class="stat-bar" :style="{ width: character.happiness + '%', background: getStatGradient('happiness', character.happiness) }"></view>
           </view>
           <text class="stat-value">{{ character.happiness }}</text>
-          <text class="stat-trend">{{ getStatTrend(character.happiness) }}</text>
+          <view class="stat-sparkline">
+            <text v-for="(dot, di) in getSparklineDots('happiness')" :key="di" class="spark-dot" :class="'dot-' + dot"></text>
+          </view>
         </view>
-        <view class="stat-item">
+        <view class="stat-item" :class="{ warning: character.intelligence < 20 }">
           <text class="stat-icon">🧠</text>
           <text class="stat-name">智力</text>
           <view class="stat-bar-wrap">
             <view class="stat-bar" :style="{ width: character.intelligence + '%', background: getStatGradient('intelligence', character.intelligence) }"></view>
           </view>
           <text class="stat-value">{{ character.intelligence }}</text>
-          <text class="stat-trend">{{ getStatTrend(character.intelligence) }}</text>
+          <view class="stat-sparkline">
+            <text v-for="(dot, di) in getSparklineDots('intelligence')" :key="di" class="spark-dot" :class="'dot-' + dot"></text>
+          </view>
         </view>
       </view>
       <view class="stat-row">
-        <view class="stat-item">
+        <view class="stat-item" :class="{ warning: character.social < 20 }">
           <text class="stat-icon">👥</text>
           <text class="stat-name">社交</text>
           <view class="stat-bar-wrap">
             <view class="stat-bar" :style="{ width: character.social + '%', background: getStatGradient('social', character.social) }"></view>
           </view>
           <text class="stat-value">{{ character.social }}</text>
-          <text class="stat-trend">{{ getStatTrend(character.social) }}</text>
+          <view class="stat-sparkline">
+            <text v-for="(dot, di) in getSparklineDots('social')" :key="di" class="spark-dot" :class="'dot-' + dot"></text>
+          </view>
         </view>
-        <view class="stat-item">
+        <view class="stat-item" :class="{ warning: character.wisdom < 20 }">
           <text class="stat-icon">📖</text>
           <text class="stat-name">智慧</text>
           <view class="stat-bar-wrap">
             <view class="stat-bar" :style="{ width: character.wisdom + '%', background: getStatGradient('wisdom', character.wisdom) }"></view>
           </view>
           <text class="stat-value">{{ character.wisdom }}</text>
-          <text class="stat-trend">{{ getStatTrend(character.wisdom) }}</text>
+          <view class="stat-sparkline">
+            <text v-for="(dot, di) in getSparklineDots('wisdom')" :key="di" class="spark-dot" :class="'dot-' + dot"></text>
+          </view>
         </view>
       </view>
       <!-- 拓展属性 -->
@@ -151,6 +163,7 @@
     <!-- 当前事件 -->
     <view class="event-panel" v-if="currentEvent && !showChoiceModal">
       <view class="event-card" :class="[eventStageClass, { 'storyline-card': currentEvent.isStoryLine, 'special-card': currentEvent.isSpecial }]">
+        <view class="event-shimmer"></view>
         <view class="event-header-row">
           <text class="event-age">{{ character.age }}岁</text>
           <text class="event-marker storyline" v-if="currentEvent.isStoryLine && currentEvent.storyLineData">
@@ -168,13 +181,17 @@
         <text class="event-atmosphere" v-if="currentEvent.atmosphere">🖋️ {{ currentEvent.atmosphere }}</text>
         <view class="event-effects" v-if="currentEvent.effect">
           <text 
-            v-for="(value, key) in currentEvent.effect" :key="key"
+            v-for="(value, key, idx) in currentEvent.effect" :key="key"
             class="effect-tag"
             :class="{ positive: value > 0, negative: value < 0 }"
+            :style="{ animationDelay: idx * 0.08 + 's' }"
             v-if="getStatName(key) && typeof value === 'number'"
           >
             {{ getStatName(key) }} {{ value > 0 ? '+' : '' }}{{ value }}
           </text>
+        </view>
+        <view class="event-index" v-if="currentEventIndex > 0">
+          <text class="event-index-text">📋 第{{ currentEventIndex }}个事件</text>
         </view>
       </view>
     </view>
@@ -484,7 +501,7 @@
 </template>
 
 <script>
-import { getCurrentStage, generateEvent, applyEventEffect, calculateDeathChance, checkAndUnlockAchievements, getTotalAchievementPoints, startExamPrep, takeExam, getAvailableExams, applyBianzhiEffects, calculateExamSuccessRate, examTypes, examPrepEvents, examResultEvents, bianzhiTypes, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles, getEducationBonus, calculateCareerSalary, getSeasonContext, generateBestieEvent, getBestieDisplay } from '@/utils/gameEngine.js'
+import { getCurrentStage, generateEvent, applyEventEffect, calculateDeathChance, checkAndUnlockAchievements, getTotalAchievementPoints, startExamPrep, takeExam, getAvailableExams, applyBianzhiEffects, calculateExamSuccessRate, calculateExamSuccessRateWithBonus, examTypes, examPrepEvents, examResultEvents, bianzhiTypes, checkPromotion, applyPromotion, getCareerTitle, processCareerYear, promotionTitles, getEducationBonus, calculateCareerSalary, getSeasonContext, generateBestieEvent, getBestieDisplay } from '@/utils/gameEngine.js'
 import { checkBestieTrigger, hostGathering, updateBesties, getFavorLevel } from '@/utils/broBestie.js'
 import { getGatheringChoiceEvent, getBestieHelpEvent, getBestieCareerEvent } from '@/utils/choiceEvents.js'
 import * as careerData from '@/utils/careerData.js'
@@ -535,6 +552,8 @@ export default {
       besties: [],
       showBestieModal: false,
       currentBestie: null,
+      currentEventIndex: 0,
+      statHistory: {},
       currentBestieIndex: -1,
       showGatheringModal: false,
       currentGatheringEvent: null
@@ -724,6 +743,18 @@ export default {
       if (value > 70) return '↑'
       if (value < 30) return '↓'
       return '→'
+    },
+    getSparklineDots(key) {
+      const history = this.statHistory[key] || []
+      if (history.length < 2) return ['gray', 'gray', 'gray']
+      const dots = []
+      for (let i = 1; i < history.length; i++) {
+        if (history[i] > history[i - 1] + 1) dots.push('green')
+        else if (history[i] < history[i - 1] - 1) dots.push('red')
+        else dots.push('gray')
+      }
+      while (dots.length < 3) dots.unshift('gray')
+      return dots
     },
     getStatName(key) {
       const names = {
@@ -1025,6 +1056,20 @@ export default {
         uni.setStorageSync('momentsAge', this.character.age)
       } catch (e) {}
       
+      if (this.currentEvent) {
+        this.currentEventIndex++
+      }
+      
+      // 记录属性历史用于sparkline趋势指示
+      if (!this.statHistory) this.statHistory = {}
+      const statKeys = ['wealth', 'health', 'happiness', 'intelligence', 'social', 'wisdom']
+      for (let si = 0; si < statKeys.length; si++) {
+        const key = statKeys[si]
+        if (!this.statHistory[key]) this.statHistory[key] = []
+        this.statHistory[key].push(this.character[key] || 0)
+        if (this.statHistory[key].length > 3) this.statHistory[key].shift()
+      }
+      
       this.naturalChanges()
       this.saveGame()
     },
@@ -1139,7 +1184,8 @@ export default {
               } else {
                 this.character._examStage = 'given_up'
               }
-              this.history.push({ age: this.character.age, text: '📝 ' + (examResult.message || '成绩公布') + '，通过概率为' + Math.round(successRate * 100) + '%' })
+              const skipSuccessRate = calculateExamSuccessRateWithBonus(this.character._examType, this.character)
+              this.history.push({ age: this.character.age, text: '📝 ' + (examResult.message || '成绩公布') + '，通过概率为' + Math.round(skipSuccessRate * 100) + '%' })
             }
           }
         } else if (this.character._examStage && this.character._examStage !== 'passed' && this.character._examStage !== 'given_up') {
@@ -1367,10 +1413,6 @@ export default {
     },
     goToAchievements() {
       uni.navigateTo({ url: '/pages/achievements/achievements' })
-    },
-    // 备考逻辑
-    goToProperties() {
-      uni.navigateTo({ url: '/pages/properties/properties' })
     },
     showPropertyPurchase() {
       this.currentPropertyChoice = getAvailableProperties(this.character)
@@ -2515,26 +2557,7 @@ export default {
   font-weight: 600;
 }
 
-/* Achievement Toast */
-.achievement-toast {
-  position: fixed;
-  top: 280rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 18rpx 28rpx;
-  background: rgba(251, 191, 36, 0.15);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(251, 191, 36, 0.3);
-  z-index: 100;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.2);
-  animation: toastIn 0.4s ease-out, toastOut 0.4s ease-in 2.5s forwards;
-}
-
+/* Achievement Icon & Info (shared with new toast) */
 .achievement-icon {
   font-size: 36rpx;
 }
@@ -3385,4 +3408,176 @@ export default {
   background: #fee2e2;
   color: #dc2626;
 }
+
+/* ═══ 第1步增强: 事件卡片扫光 + 序号 + 弹出动画 ═══ */
+
+/* 年份推进扫光动画 */
+@keyframes yearSweep {
+  0% { transform: translateX(-120%) translateY(-120%) rotate(45deg); opacity: 0; }
+  15% { opacity: 0.7; }
+  85% { opacity: 0.7; }
+  100% { transform: translateX(120%) translateY(120%) rotate(45deg); opacity: 0; }
+}
+
+.event-shimmer {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 55%, transparent 70%);
+  pointer-events: none;
+  animation: yearSweep 1.5s ease-in-out 0.3s 1 forwards;
+  z-index: 0;
+}
+
+.event-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 事件序号标记 */
+.event-index {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+  text-align: right;
+}
+
+.event-index-text {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+/* 标签弹出动画 */
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.5) translateY(8rpx); }
+  60% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.effect-tag {
+  animation: popIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ═══ 第2步增强: 成就解锁升级 ═══ */
+
+@keyframes achievementSlideIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-160rpx); }
+  60% { opacity: 1; transform: translateX(-50%) translateY(8rpx); }
+  80% { transform: translateX(-50%) translateY(-4rpx); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes achievementSlideOut {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-200rpx); }
+}
+
+.achievement-toast {
+  position: fixed;
+  top: 120rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 22rpx 36rpx;
+  background: linear-gradient(135deg, rgba(30, 20, 10, 0.95), rgba(50, 30, 15, 0.95));
+  border-radius: 24rpx;
+  border: 2rpx solid rgba(251, 191, 36, 0.5);
+  z-index: 110;
+  box-shadow: 0 8rpx 40rpx rgba(251, 191, 36, 0.25),
+              0 0 60rpx rgba(251, 191, 36, 0.15),
+              inset 0 1rpx 0 rgba(255, 255, 255, 0.1);
+  animation: achievementSlideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+             achievementSlideOut 0.35s ease-in 2.5s forwards;
+  overflow: visible;
+}
+
+/* 金色粒子 ::before */
+.achievement-toast::before {
+  content: '';
+  position: absolute;
+  width: 12rpx;
+  height: 12rpx;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.9), rgba(251, 191, 36, 0.3));
+  border-radius: 50%;
+  top: -8rpx;
+  left: 18rpx;
+  animation: goldParticleOut1 0.8s ease-out forwards;
+  animation-delay: 0.15s;
+}
+
+/* 金色粒子 ::after */
+.achievement-toast::after {
+  content: '';
+  position: absolute;
+  width: 10rpx;
+  height: 10rpx;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.85), rgba(251, 191, 36, 0.2));
+  border-radius: 50%;
+  top: -6rpx;
+  right: 24rpx;
+  animation: goldParticleOut2 0.7s ease-out forwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes goldParticleOut1 {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-40rpx, 60rpx) scale(0); opacity: 0; }
+}
+
+@keyframes goldParticleOut2 {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(50rpx, 50rpx) scale(0); opacity: 0; }
+}
+
+/* ═══ 第4步增强: 属性预警 + sparkline ═══ */
+
+/* 红色脉冲预警 */
+@keyframes warningPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.5); }
+  50% { box-shadow: 0 0 0 12rpx rgba(248, 113, 113, 0); }
+}
+
+.stat-item.warning {
+  animation: warningPulse 1s ease-in-out infinite;
+  background: rgba(248, 113, 113, 0.08);
+  border-radius: 10rpx;
+  padding: 4rpx 8rpx;
+  margin: -4rpx -8rpx;
+}
+
+/* Mini Sparkline 趋势指示器 */
+.stat-sparkline {
+  display: flex;
+  gap: 4rpx;
+  align-items: flex-end;
+  margin-left: 2rpx;
+}
+
+.spark-dot {
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+
+.spark-dot.dot-green {
+  background: #4ade80;
+  box-shadow: 0 0 4rpx rgba(74, 222, 128, 0.5);
+}
+
+.spark-dot.dot-red {
+  background: #f87171;
+  box-shadow: 0 0 4rpx rgba(248, 113, 113, 0.5);
+}
+
+.spark-dot.dot-gray {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 </style>

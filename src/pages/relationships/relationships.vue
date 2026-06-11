@@ -46,10 +46,14 @@
           <view class="npc-header">
             <text class="npc-icon">{{ getNpcIcon(npc) }}</text>
             <view class="npc-info">
-              <text class="npc-name">{{ npc.name }}</text>
+              <view class="npc-name-row">
+                <text class="npc-name">{{ npc.name }}</text>
+                <view class="npc-status-dot" :class="'status-' + getNpcStatusType(npc)"></view>
+              </view>
               <text class="npc-meta">{{ npc.gender === "男" ? "♂ 绅士" : "♀ 淑女" }} · {{ getRelationName(npc) }}</text>
+              <text class="npc-duration" v-if="npc.appearAge">认识于{{ npc.appearAge }}岁 · 已相识{{ getRelationYears(npc) }}年</text>
             </view>
-            <text class="npc-status" v-if="npc.status !== 'alive'">{{ npc.status === 'dead' ? '💀 已故' : (npc.status === 'left' ? '🛫 已离开' : '💔 疏远') }}</text>
+            <text class="npc-status-text" v-if="npc.status !== 'alive'">{{ npc.status === 'dead' ? '💀 已故' : (npc.status === 'left' ? '🛫 已离开' : '💔 疏远') }}</text>
             <text class="npc-level" :style="{ color: getRelationColor(npc) }">{{ getRelationLevelName(npc) }}</text>
           </view>
 
@@ -61,6 +65,7 @@
                 <view class="stat-fill affection" :style="{ width: npc.affection + '%' }"></view>
               </view>
               <text class="stat-val">{{ npc.affection }}</text>
+              <text class="affection-trend" :class="{ up: getAffectionTrend(npc) > 0, down: getAffectionTrend(npc) < 0 }">{{ getAffectionTrend(npc) > 0 ? '↑' : getAffectionTrend(npc) < 0 ? '↓' : '' }}</text>
             </view>
             <view class="stat-row">
               <text class="stat-label">信任感</text>
@@ -90,9 +95,17 @@
       </view>
 
       <view v-if="!displayRelationships.length" class="empty">
-        <text class="empty-icon">👤</text>
-        <text class="empty-text">暂无人际关系</text>
+        <view class="empty-illustration">
+          <text class="empty-illust-bg">🌌</text>
+          <text class="empty-illust-icon">👤</text>
+        </view>
+        <text class="empty-text">还没有和任何人建立关系</text>
         <text class="empty-hint">继续度过人生，你会慢慢结交各类有趣的人士。</text>
+        <view class="empty-tips">
+          <text class="tip-line">💡 多参与社交活动可结识新朋友</text>
+          <text class="tip-line">💡 关注相亲角也许能遇到命中注定的人</text>
+          <text class="tip-line">💡 维护好感度需要经常互动</text>
+        </view>
       </view>
     </view>
 
@@ -280,6 +293,13 @@ export default {
       this.character = uni.getStorageSync("currentCharacter") || {}
       this.relationships = uni.getStorageSync("relationships") || []
       
+      // 记录上一次好感度用于趋势对比
+      for (let i = 0; i < this.relationships.length; i++) {
+        if (this.relationships[i]._lastAffection == null) {
+          this.relationships[i]._lastAffection = this.relationships[i].affection || 0
+        }
+      }
+      
       // 惰性加载相亲和朋友圈
       this.loadMatchmaking()
       this.loadMoments()
@@ -331,6 +351,24 @@ export default {
     getRelationColor(npc) {
       const level = getRelationLevel ? getRelationLevel(npc) : null
       return level ? level.color : "#666"
+    },
+    getNpcStatusType(npc) {
+      if (!npc || npc.status === 'dead' || npc.status === 'left') return 'left'
+      if (npc.status === 'estranged' || npc.affection < 10) return 'estranged'
+      return 'active'
+    },
+    getRelationYears(npc) {
+      if (!npc || !npc.appearAge) return 0
+      return (this.character.age || 0) - npc.appearAge
+    },
+    getAffectionTrend(npc) {
+      if (!npc) return 0
+      const prev = npc._lastAffection
+      const curr = npc.affection || 0
+      if (prev == null) return 0
+      if (curr > prev + 2) return 1
+      if (curr < prev - 2) return -1
+      return 0
     },
     getRandomGradient(name) {
       // 通过名字生成唯一的渐变色
@@ -1247,5 +1285,123 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ═══ NPC 名字行 + 状态点 ═══ */
+.npc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.npc-status-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.npc-status-dot.status-active {
+  background: #4ade80;
+  box-shadow: 0 0 8rpx rgba(74, 222, 128, 0.5);
+}
+
+.npc-status-dot.status-estranged {
+  background: #fbbf24;
+  box-shadow: 0 0 8rpx rgba(251, 191, 36, 0.4);
+}
+
+.npc-status-dot.status-left {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ═══ 关系持续年数 ═══ */
+.npc-duration {
+  font-size: 18rpx;
+  color: #6b6b8a;
+  display: block;
+  margin-top: 2rpx;
+}
+
+/* ═══ 好感度趋势箭头 ═══ */
+.affection-trend {
+  font-size: 22rpx;
+  font-weight: 700;
+  width: 24rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.affection-trend.up {
+  color: #4ade80;
+  animation: trendUpBounce 0.4s ease-out;
+}
+
+.affection-trend.down {
+  color: #f87171;
+  animation: trendDownBounce 0.4s ease-out;
+}
+
+@keyframes trendUpBounce {
+  0% { transform: translateY(4rpx); opacity: 0; }
+  60% { transform: translateY(-6rpx); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes trendDownBounce {
+  0% { transform: translateY(-4rpx); opacity: 0; }
+  60% { transform: translateY(6rpx); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* ═══ 增强空状态 ═══ */
+.empty-illustration {
+  position: relative;
+  width: 240rpx;
+  height: 240rpx;
+  margin: 0 auto 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-illust-bg {
+  position: absolute;
+  font-size: 180rpx;
+  opacity: 0.15;
+  animation: emptyFloat 3s ease-in-out infinite;
+}
+
+.empty-illust-icon {
+  font-size: 80rpx;
+  opacity: 0.5;
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10rpx) scale(1.05); }
+}
+
+.empty-tips {
+  margin-top: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.tip-line {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.25);
+  text-align: center;
+}
+
+/* ═══ NPC 状态文字标签 ═══ */
+.npc-status-text {
+  font-size: 18rpx;
+  color: #ff6b6b;
+  margin-left: 8rpx;
+  background: rgba(255, 107, 107, 0.1);
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
 }
 </style>

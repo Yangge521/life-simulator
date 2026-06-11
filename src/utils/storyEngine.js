@@ -390,3 +390,214 @@ export function updateStoryState(state, action, data) {
   
   return newState
 }
+
+// ─── 解析故事线选择分支 ────────────────────────────────────────────
+// 根据用户在故事线关键抉择中的选择，设置对应的 flags
+// 参数: lineType(分类), lineId(线ID), stageIndex(阶段索引), chosenChoiceIndex(选择索引), storyState(故事状态)
+// 返回: 更新后的 storyState（已包含新 flags）
+export function resolveStoryChoice(lineType, lineId, stageIndex, chosenChoiceIndex, storyState) {
+  if (!storyState) return storyState
+  if (chosenChoiceIndex === undefined || chosenChoiceIndex === null) return storyState
+  
+  const newState = JSON.parse(JSON.stringify(storyState))
+  if (!newState.flags) newState.flags = []
+  
+  const addFlag = function(flag) {
+    if (flag && newState.flags.indexOf(flag) === -1) {
+      newState.flags.push(flag)
+    }
+  }
+  
+  // ─── career.tech_pioneer | stage 2 (22岁) ──────────────────────────
+  if (lineType === 'career' && lineId === 'tech_pioneer' && stageIndex === 2) {
+    if (chosenChoiceIndex === 0) {
+      // 全情投入创业
+      addFlag('chose_startup')
+      addFlag('tech_startup')
+    } else if (chosenChoiceIndex === 1) {
+      // 先进大厂积累经验
+      addFlag('chose_bigco')
+    } else if (chosenChoiceIndex === 2) {
+      // 读研深造技术
+      addFlag('chose_gradschool')
+    }
+  }
+  
+  // ─── career.athlete | stage 2 (16岁) ───────────────────────────────
+  if (lineType === 'career' && lineId === 'athlete' && stageIndex === 2) {
+    if (chosenChoiceIndex === 0) {
+      // 全力冲国家队
+      addFlag('chose_national_team')
+      addFlag('national_team')
+    } else if (chosenChoiceIndex === 1) {
+      // 兼顾学业和运动
+      addFlag('chose_dual_path')
+    } else if (chosenChoiceIndex === 2) {
+      // 放弃走职业路线
+      addFlag('chose_quit_sports')
+    }
+  }
+  
+  // ─── career.chef | stage 1 (18岁) ──────────────────────────────────
+  if (lineType === 'career' && lineId === 'chef' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 去法国蓝带学西餐
+      addFlag('chose_french_cuisine')
+      addFlag('culinary_school')
+    } else if (chosenChoiceIndex === 1) {
+      // 拜中餐大师为师
+      addFlag('chose_chinese_cuisine')
+      addFlag('culinary_school')
+    } else if (chosenChoiceIndex === 2) {
+      // 自学创新融合菜
+      addFlag('chose_fusion_cuisine')
+      addFlag('culinary_school')
+    }
+  }
+  
+  // ─── career.entrepreneur | stage 1 (22岁) ──────────────────────────
+  if (lineType === 'career' && lineId === 'entrepreneur' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 找稳定工作
+      addFlag('chose_stable_job')
+    } else if (chosenChoiceIndex === 1) {
+      // 先打工积累经验
+      addFlag('chose_work_first')
+    } else if (chosenChoiceIndex === 2) {
+      // 直接创业
+      addFlag('chose_direct_startup')
+      addFlag('entrepreneur_first')
+    }
+  }
+  
+  // ─── career.doctor_path | stage 1 (23岁) ───────────────────────────
+  if (lineType === 'career' && lineId === 'doctor_path' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 选外科，挑战极限
+      addFlag('chose_surgery')
+      addFlag('internship_done')
+    } else if (chosenChoiceIndex === 1) {
+      // 选内科，深耕医学
+      addFlag('chose_internal_medicine')
+      addFlag('internship_done')
+    } else if (chosenChoiceIndex === 2) {
+      // 选儿科，守护未来
+      addFlag('chose_pediatrics')
+      addFlag('internship_done')
+    }
+  }
+  
+  // ─── romance.long_distance | stage 1 (20岁) ────────────────────────
+  if (lineType === 'romance' && lineId === 'long_distance' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 咬牙坚持
+      addFlag('chose_persist_ld')
+      addFlag('ld_struggling')
+    } else if (chosenChoiceIndex === 1) {
+      // 提出分手
+      addFlag('chose_breakup_ld')
+    } else if (chosenChoiceIndex === 2) {
+      // 试图转学到一起
+      addFlag('chose_transfer_ld')
+    }
+  }
+  
+  // ─── special.hermit | stage 1 (37岁) ───────────────────────────────
+  if (lineType === 'special' && lineId === 'hermit' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 回农村种地
+      addFlag('chose_farming')
+      addFlag('moved_to_country')
+    } else if (chosenChoiceIndex === 1) {
+      // 去山里开民宿
+      addFlag('chose_hostel')
+      addFlag('moved_to_country')
+    } else if (chosenChoiceIndex === 2) {
+      // 找个小镇定居
+      addFlag('chose_small_town')
+      addFlag('moved_to_country')
+    }
+  }
+  
+  // ─── special.crime_redemption | stage 1 (25岁) ─────────────────────
+  if (lineType === 'special' && lineId === 'crime_redemption' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 隐瞒过去重新开始
+      addFlag('chose_hide_past')
+      addFlag('released')
+    } else if (chosenChoiceIndex === 1) {
+      // 坦然面对，努力证明自己
+      addFlag('chose_honest_restart')
+      addFlag('released')
+    } else if (chosenChoiceIndex === 2) {
+      // 回到老圈子又走歪了
+      addFlag('chose_back_to_crime')
+    }
+  }
+  
+  // ─── career.internet_celebrity | stage 1 (18岁) ────────────────────
+  if (lineType === 'career' && lineId === 'internet_celebrity' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 签约MCN机构
+      addFlag('chose_mcn')
+      addFlag('signed_mcn')
+    } else if (chosenChoiceIndex === 1) {
+      // 继续独立创作
+      addFlag('chose_indie')
+      addFlag('rising_creator')
+    } else if (chosenChoiceIndex === 2) {
+      // 把自媒体当副业
+      addFlag('chose_side_hustle')
+    }
+  }
+  
+  // ─── family.pet_parent | stage 1 (25岁) ────────────────────────────
+  if (lineType === 'family' && lineId === 'pet_parent' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 全力救助，成立救助小组
+      addFlag('chose_full_rescue')
+      addFlag('rescued_stray')
+    } else if (chosenChoiceIndex === 1) {
+      // 尽己所能，给一个家就好
+      addFlag('chose_one_pet')
+      addFlag('rescued_stray')
+    } else if (chosenChoiceIndex === 2) {
+      // 呼吁身边人一起参与
+      addFlag('chose_community_rescue')
+      addFlag('rescued_stray')
+    }
+  }
+  
+  // ─── special.undercover | stage 1 (28岁) ───────────────────────────
+  if (lineType === 'special' && lineId === 'undercover' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 继续深入，配合调查
+      addFlag('chose_deep_cover')
+      addFlag('provided_lead')
+    } else if (chosenChoiceIndex === 1) {
+      // 急流勇退，保护自己
+      addFlag('chose_withdraw')
+    } else if (chosenChoiceIndex === 2) {
+      // 匿名举报，保持距离
+      addFlag('chose_anonymous_tip')
+      addFlag('provided_lead')
+    }
+  }
+  
+  // ─── career.esports | stage 1 (17岁) ───────────────────────────────
+  if (lineType === 'career' && lineId === 'esports' && stageIndex === 1) {
+    if (chosenChoiceIndex === 0) {
+      // 签约成为职业选手
+      addFlag('chose_pro_player')
+      addFlag('signed_team')
+    } else if (chosenChoiceIndex === 1) {
+      // 拒绝，继续学业
+      addFlag('chose_reject_esports')
+    } else if (chosenChoiceIndex === 2) {
+      // 做游戏主播
+      addFlag('chose_streamer')
+    }
+  }
+  
+  return newState
+}
